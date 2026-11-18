@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FLEXO Plate travel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* the app's ThemeContext palette and the Plate Rolls hairlines */
+  :root {
+    color-scheme: dark;
+    --bg: #0a0a0a; --bg2: #1a1a1a; --hair: #333; --hair2: #555;
+    --tx: #ffffff; --tx2: #e5e5e5; --mu: #a3a3a3; --pri: #3b82f6; --on: rgba(59,130,246,.16);
+    --warn: #fbbf24; --grid: rgba(255,255,255,.10); --zero: #d4d4d4;
+    --steel: #6d7076; --tape: #b5814d; --backing: #b8ae6a; --polymer: #4f8e79; --pitch: #f87171;
+    --f-bcd: #38bdf8; --f-temp: #f472b6; --f-plate: #4ade80; --f-tape: #fb923c; --f-all: #e2e0da;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff; --bg2: #f5f5f5; --hair: #d4d4d4; --hair2: #a3a3a3;
+    --tx: #1a1a1a; --tx2: #333333; --mu: #666666; --on: rgba(59,130,246,.14);
+    --warn: #b45309; --grid: rgba(0,0,0,.10); --zero: #404040;
+    --steel: #9a9ca1; --tape: #e8b27a; --backing: #f2e9a8; --polymer: #7fb7a4; --pitch: #c02626;
+    --f-bcd: #00a3e0; --f-temp: #e4007c; --f-plate: #2e9e4f; --f-tape: #f07d1a; --f-all: #2b2a27;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--tx); font: 14px/1.4 "Segoe UI", system-ui, sans-serif; }
+  button, select, input { font: inherit; color: inherit; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--mu); font-size: 12px; }
+  .sp { flex: 1; }
+  :focus-visible { outline: 2px solid var(--pri); outline-offset: 1px; }
+
+  .page { padding: 14px 18px 28px; max-width: 1500px; margin: 0 auto; }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .head h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+  .head h1 span { margin-left: 8px; font-weight: 400; letter-spacing: 0; color: var(--mu); }
+
+  .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .lsel { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 4px 0 9px; border: 1px solid var(--hair); border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--mu); }
+  .lsel input { width: 70px; border: 0; background: var(--bg); color: var(--tx); font-family: Consolas, monospace; font-size: 19px; font-weight: 800; height: 26px; text-align: right; }
+  .pills { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 30px; padding: 0 11px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--hair); background: transparent; color: var(--tx2); white-space: nowrap; }
+  .pill.on { border-color: var(--pri); background: var(--on); color: var(--tx); }
+  .pill.sm { height: 24px; padding: 0 8px; font-size: 12px; }
+  .pill.icon { padding: 0 6px; min-width: 32px; gap: 6px; }
+  .pill.icon small { font-size: 11px; font-weight: 800; font-family: Consolas, monospace; }
+  .pill svg { display: block; flex: none; }
+  .ink { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--tx2); }
+  .ink input { width: 110px; margin: 0; accent-color: var(--pri); }
+  .cap { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--mu); }
+
+  .facts { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .fact { padding: 9px 12px; min-width: 0; background: var(--bg); }
+  .fact.key { background: var(--bg2); }
+  .fact .k { font-size: 12px; color: var(--mu); white-space: nowrap; }
+  .fact .v { font-size: 20px; font-weight: 800; font-family: Consolas, monospace; white-space: nowrap; }
+  .fact .s { font-size: 12px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 1250px) { .facts { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
+  .panel { border: 1px solid var(--hair); border-radius: 8px; min-width: 0; margin-bottom: 12px; }
+  .phead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--hair); }
+  .phead h2 { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--mu); }
+
+  /* the factor rows */
+  .scroll { overflow-x: auto; }
+  .rows { min-width: 1120px; }
+  .frow { display: grid; grid-template-columns: 196px minmax(300px, 1fr) 176px minmax(260px, 1.15fr) 176px; align-items: center; border-bottom: 1px solid var(--hair); }
+  .frow:last-child { border-bottom: 0; }
+  .frow > div { padding: 8px 10px; min-width: 0; }
+  .frow.hd > div { padding: 5px 10px; font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--mu); white-space: nowrap; }
+  .fname { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+  .fname i { flex: none; width: 12px; height: 12px; border-radius: 3px; }
+  .fstd { font-size: 12px; color: var(--mu); margin-left: 20px; white-space: nowrap; }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl input[type=range] { flex: 1; min-width: 90px; margin: 0; accent-color: var(--pri); }
+  .ctl output { width: 9ch; text-align: right; font-family: Consolas, monospace; font-weight: 800; font-size: 15px; white-space: nowrap; }
+  .nudge { width: 26px; height: 26px; padding: 0; border: 1px solid var(--hair); border-radius: 6px; background: transparent; cursor: pointer; font-size: 16px; font-weight: 700; line-height: 1; }
+  .nudge { display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .nudge:disabled { opacity: .3; cursor: default; }
+  /* a reset is amber while its slider is off the standard, and plain grey when there is nothing to reset */
+  .nudge[data-reset] { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .nudge[data-reset]:disabled { color: var(--mu); border-color: var(--hair); background: transparent; }
+  .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .ln { display: flex; align-items: center; gap: 6px; height: 22px; white-space: nowrap; font-size: 13px; }
+  .ln .who { width: 72px; font-size: 12px; color: var(--mu); }
+  .ln.pick .who { color: var(--tx); font-weight: 800; }
+  .ln .fig { font-family: Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .ln small { font-size: 12px; color: var(--mu); }
+  .right { justify-content: flex-end; }
+  .axis { position: relative; height: 26px; }
+  .axis > span { position: absolute; top: 12px; transform: translateX(-50%); font-family: Consolas, monospace; font-size: 11px; font-weight: 400; letter-spacing: 0; }
+  .axis .t { top: 0; left: 50%; font-family: inherit; font-weight: 800; letter-spacing: .5px; white-space: nowrap; }
+  .axis .l { top: 0; left: 0; transform: none; font-family: inherit; font-weight: 800; }
+  .axis .r { top: 0; left: auto; right: 0; transform: none; font-family: inherit; font-weight: 800; }
+  .marks { position: relative; }
+  .marks .g { position: absolute; top: -8px; bottom: -8px; width: 1px; background: var(--grid); }
+  .marks .g.z { background: var(--zero); }
+  .mk { position: relative; height: 22px; }
+  .mk b { position: absolute; top: 5px; height: 12px; min-width: 2px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(128,128,128,.55); }
+  .mk em { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); padding: 0 4px; font-style: normal; font-size: 11px; font-weight: 800; line-height: 16px; color: var(--mu); background: var(--bg); }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  @media (max-width: 1050px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .draw { padding: 10px 12px 12px; }
+  .stat { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--hair); background: var(--bg2); }
+  .stat .k { font-size: 12px; color: var(--mu); white-space: nowrap; }
+  .stat .v { font-size: 20px; font-weight: 800; font-family: Consolas, monospace; white-space: nowrap; }
+  .stat .s { font-size: 12px; color: var(--mu); white-space: nowrap; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px 16px; font-size: 12px; color: var(--tx2); margin-top: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="head"><h1>FLEXO <span>Plate travel</span></h1><span class="sp"></span><span class="pills" id="themes"></span></div>
+
+  <div class="bar">
+    <label class="lsel">Teeth <input type="number" id="teeth" min="20" max="250" step="1" aria-label="Tooth count"></label>
+    <span class="cap" style="margin-left:6px">Cylinder <span class="pills" id="metal"></span></span>
+    <span class="muted" id="stackline"></span>
+    <span class="sp"></span>
+    <span class="pills" id="lens"></span>
+    <span class="pills" id="temps"></span>
+  </div>
+
+  <div class="facts" id="facts"></div>
+
+  <section class="panel">
+    <div class="scroll"><div class="rows">
+      <div class="frow hd"><div>Factor</div><div>Set to</div><div>Change</div><div><div class="axis" id="axis"></div></div><div style="text-align:right">End of repeat</div></div>
+
+      <div class="frow">
+        <div><div class="fname"><i style="background:var(--f-bcd)"></i>Cylinder BCD</div><div class="fstd" id="std-bcd"></div></div>
+        <div><div class="ctl"><button type="button" class="nudge" data-nudge="dBcd" data-by="-1" aria-label="Smaller BCD">−</button><input type="range" id="dBcd" aria-label="Measured BCD"><button type="button" class="nudge" data-nudge="dBcd" data-by="1" aria-label="Larger BCD">+</button><output id="bcdOut"></output><button type="button" class="nudge" data-reset="dBcd" title="Back to standard" aria-label="Set the BCD back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div></div>
+        <div id="chg-bcd"></div><div><div class="marks" id="bar-bcd"></div></div><div id="trv-bcd"></div>
+      </div>
+
+      <div class="frow">
+        <div><div class="fname"><i style="background:var(--f-temp)"></i>Cylinder temperature</div><div class="fstd">against when it was measured</div></div>
+        <div><div class="ctl"><button type="button" class="nudge" data-nudge="dT" data-by="-1" aria-label="Colder">−</button><input type="range" id="dT" aria-label="Temperature change"><button type="button" class="nudge" data-nudge="dT" data-by="1" aria-label="Warmer">+</button><output id="dTout"></output><button type="button" class="nudge" data-reset="dT" title="Back to standard" aria-label="Set the temperature back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div></div>
+        <div id="chg-temp"></div><div><div class="marks" id="bar-temp"></div></div><div id="trv-temp"></div>
+      </div>
+
+      <div class="frow">
+        <div><div class="fname"><i style="background:var(--f-plate)"></i>Plate thickness</div><div class="fstd" id="std-plate"></div></div>
+        <div>
+          <div class="ctl"><button type="button" class="nudge" data-nudge="plate" data-by="-1" aria-label="Thinner plate">−</button><input type="range" id="plate" aria-label="Plate thickness"><button type="button" class="nudge" data-nudge="plate" data-by="1" aria-label="Thicker plate">+</button><output id="plateOut"></output><button type="button" class="nudge" data-reset="plate" title="Back to standard" aria-label="Set the plate thickness back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+          <div class="sub"><span class="pills" id="plate-picks"></span></div>
+        </div>
+        <div id="chg-plate"></div><div><div class="marks" id="bar-plate"></div></div><div id="trv-plate"></div>
+      </div>
+
+      <div class="frow">
+        <div><div class="fname"><i style="background:var(--f-tape)"></i>Mounting tape</div><div class="fstd" id="std-tape"></div></div>
+        <div>
+          <div class="ctl"><button type="button" class="nudge" data-nudge="tape" data-by="-1" aria-label="Thinner tape">−</button><input type="range" id="tape" aria-label="Tape thickness"><button type="button" class="nudge" data-nudge="tape" data-by="1" aria-label="Thicker tape">+</button><output id="tapeOut"></output><button type="button" class="nudge" data-reset="tape" title="Back to standard" aria-label="Set the tape thickness back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+          <div class="sub"><span class="pills" id="tape-picks"></span></div>
+        </div>
+        <div id="chg-tape"></div><div><div class="marks" id="bar-tape"></div></div><div id="trv-tape"></div>
+      </div>
+    </div></div>
+  </section>
+
+  <div class="two">
+    <section class="panel">
+      <div class="phead">
+        <h2>At the end of the repeat</h2>
+        <span class="sp"></span>
+        <label class="ink" title="Ink opacity in the lens: lower it to see through overlapping inks">Ink <input type="range" id="alpha" min="20" max="100" step="5" aria-label="Ink opacity in the lens"><span class="mono" id="alphaOut" style="width:4ch;text-align:right"></span></label>
+        <span class="pills" id="pats"></span>
+      </div>
+      <div class="draw"><div id="lensdraw"></div><div class="legend" id="lens-legend"></div></div>
+    </section>
+    <section class="panel">
+      <div class="phead"><h2>The stack</h2><span class="muted">To scale through its thickness</span></div>
+      <div class="stat" id="all-stat"></div>
+      <div class="draw"><div id="stackdraw"></div><div class="legend" id="stack-legend"></div></div>
+    </section>
+  </div>
+</div>
+
+<script>
+// Plate travel, on its own: one file, nothing loaded, nothing saved. It is the
+// Travel tab of Plate Rolls without the app round it, and the maths is the
+// app's (shared/plateCompare.js travelPrint). The standard stack is fixed here
+// at the figures below; in the app it is the shop's Stack setup.
+const TAU = 2 * Math.PI;
+const STACK = { plate: 0.067, backing: 0.005, tape: 0.015, cp: 0.125 };           // the standard
+const PICKS = { plate: [0.045, 0.067, 0.1, 0.107, 0.125], tape: [0.015, 0.02] };   // the Stack setup picks
+const RANGE = { plate: [0.04, 0.13], tape: [0.01, 0.03] }, STEP = 0.0001; // both thickness sliders move in tenths of a thousandth
+const GROWTH = { steel: 6.5e-6, aluminium: 13.1e-6 };                               // per °F, as shown on the type badge
+const METAL = { steel: 'Steel', aluminium: 'Aluminium' };
+const gear = (teeth) => {
+  const R = teeth * STACK.cp, rp = R / TAU, K = TAU * (STACK.plate - STACK.backing);
+  return { teeth, R, rp, K, dist: K / R, std: 2 * (rp - STACK.tape - STACK.plate) };
+};
+// What prints, with the cylinder dF warmer, this plate and this tape. The art is
+// always made short for the plate in use.
+const printed = (g, { dBcd = 0, dF = 0, metal = 'steel', plate = STACK.plate, tape = STACK.tape }) => {
+  const bcd = (g.std + dBcd) * (1 + GROWTH[metal] * dF);
+  const flat = g.R - TAU * (plate - STACK.backing);
+  return (flat * g.rp) / (bcd / 2 + tape + STACK.backing);
+};
+
+// dBcd is the simulated reading against the standard BCD, which moves with the tooth count.
+// It opens with every slider at the standard.
+const state = { teeth: 71, metal: 'steel', dBcd: 0, dT: 0, plate: STACK.plate, tape: STACK.tape, pat: 'cross', alpha: 100, len: 'in', temp: 'F', theme: 'dark' };
+const BCD_RANGE = 0.003, BCD_STEP = 0.00005;
+const PATTERNS = [['cross', 'Crosshair'], ['mark', 'Register mark'], ['micro', 'Micro print'], ['ros175', 'Rosette 175'], ['ros300', 'Rosette 300'], ['circles', 'Micro circles']];
+const LPI = { ros175: 175, ros300: 300 };
+const $ = (id) => document.getElementById(id);
+
+// ----- figures -----
+const sgn = (v) => (v > 5e-7 ? '+' : v < -5e-7 ? '−' : '');
+const way = (v) => (v > 5e-7 ? 'long' : v < -5e-7 ? 'short' : '');
+const mm = () => state.len === 'mm';
+const fLen = (v, d) => (mm() ? (v * 25.4).toFixed(d == null ? 3 : d) : v.toFixed(d == null ? 4 : d));
+const sLen = (v, d) => sgn(v) + fLen(Math.abs(v), d);
+const mark = () => (mm() ? ' mm' : '"');
+const fineOf = (v) => (mm() ? v * 25400 : v * 1000), fineName = () => (mm() ? 'µm' : 'thou');
+const fFine = (v) => { const a = Math.abs(fineOf(v)); return sgn(v) + (a < 10 ? a.toFixed(2) : a < 100 ? a.toFixed(1) : a.toFixed(0)); };
+const dF = () => (state.temp === 'C' ? state.dT * 1.8 : state.dT);
+const fTemp = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}°${state.temp}`;
+const btn = (group, value, on, label, cls = '') => `<button type="button" class="pill ${cls}${on ? ' on' : ''}" data-group="${group}" data-value="${value}" aria-pressed="${on}">${label}</button>`;
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+const nearest = (list, want) => list.reduce((a, b) => (Math.abs(Math.log(b / want)) < Math.abs(Math.log(a / want)) ? b : a));
+
+// ----- the pattern buttons, as on the Compare tab -----
+const pLine = (body) => `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const pDots = (pitch, r) => {
+  let out = '';
+  for (let row = -3; row <= 3; row++) for (let col = -3; col <= 3; col++) {
+    const x = 10 + col * pitch + (row % 2 ? pitch / 2 : 0), y = 10 + row * pitch * 0.866;
+    if (Math.hypot(x - 10, y - 10) <= 8.2) out += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="currentColor" stroke="none"/>`;
+  }
+  return out;
+};
+const PAT_ICON = {
+  cross: () => pLine('<circle cx="10" cy="10" r="5.2"/><path d="M10 1.5v17M1.5 10h17"/>'),
+  mark: () => pLine('<rect x="3" y="3" width="14" height="14"/><path d="M3 10h14M10 3v14M3 3l14 14"/>'),
+  micro: () => '<svg width="24" height="18" viewBox="0 0 26 20" aria-hidden="true" fill="currentColor" font-family="Arial, Helvetica, sans-serif" font-weight="700"><text x="0" y="16" font-size="15">A</text><text x="11.5" y="16" font-size="10.5">A</text><text x="19.5" y="16" font-size="7">A</text></svg>',
+  ros175: () => pLine(pDots(5.6, 1.9)),
+  ros300: () => pLine(pDots(3.3, 1.05)),
+  circles: () => pLine([-1, 0, 1].map(a => [-1, 0, 1].map(b => `<circle cx="${10 + a * 6}" cy="${10 + b * 6}" r="1.9" stroke-width="1.3"/>`).join('')).join('')),
+};
+
+// ----- the drawings -----
+// The lens and its six patterns are the Compare tab's own (PlateCompare.js
+// lensParts): geometry in micrometres, Z screen pixels per micrometre. The
+// standard is the grey mark, which the opacity slider leaves alone and the
+// rosettes do not draw; everything else handed in prints as an ink.
+const UM = 25400, LW = 100, MARK_BOX = 0.125 * UM, MARK_LINE = 0.0075 * UM, MARK_TICK = 0.04 * UM, MARK_AT = MARK_BOX / 2 - 0.02 * UM;
+const RING_OD = 0.04 * UM, RING_BORDER = 0.01 * UM, RING_PITCH = 0.06 * UM;
+const lensHalf = (pat, maxEnd) => (pat === 'cross' ? Math.max(maxEnd * 1.3 + LW, 320)
+  : pat === 'mark' ? MARK_BOX * 0.85 + maxEnd
+    : pat === 'micro' ? 3000
+      : pat === 'circles' ? Math.max(2000, maxEnd + 2 * RING_OD)
+        : Math.max(900, 2 * maxEnd));
+const ringPath = (x, y, r0, r1) => `M${x - r1},${y} a${r1},${r1} 0 1,0 ${2 * r1},0 a${r1},${r1} 0 1,0 ${-2 * r1},0 Z M${x - r0},${y} a${r0},${r0} 0 1,1 ${2 * r0},0 a${r0},${r0} 0 1,1 ${-2 * r0},0 Z`;
+const lensMarks = (marks, pat, Z, cx, cy, r, teeth, tag = '') => {
+  const inks = marks.map(m => ({ nom: !!m.std, fill: m.ink, ang: m.ang, k: m.k, err: m.off * UM }));
+  const a = state.alpha / 100, sty = (i) => (i.nom ? '' : 'style="mix-blend-mode:multiply"'), op = (i) => (i.nom ? 1 : a);
+  let defs = '', body = '';
+  if (pat === 'cross') {
+    const lw = Math.max(1.5, LW * Z);
+    body = inks.map(i => `<g ${sty(i)} opacity="${op(i)}" stroke="${i.fill}" stroke-width="${lw}"><line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}"/><line x1="${cx + i.err * Z}" y1="${cy - r}" x2="${cx + i.err * Z}" y2="${cy + r}"/></g>`).join('');
+  } else if (pat === 'mark') {
+    const B = MARK_BOX * Z, t = MARK_LINE * Z, Lt = MARK_TICK * Z, ta = MARK_AT * Z;
+    body = inks.map((i, n) => {
+      const x = cx + i.err * Z, id = `lm${n}`, rc = (rx, ry, w, h, extra = '') => `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${i.fill}" ${extra}/>`;
+      defs += `<clipPath id="${id}"><rect x="${x - B / 2 - t}" y="${cy - B / 2 - t}" width="${B + 2 * t}" height="${B + 2 * t}"/></clipPath>`;
+      return `<g clip-path="url(#${id})" ${sty(i)} opacity="${op(i)}">
+        <rect x="${x - B / 2 - t / 2}" y="${cy - B / 2 - t / 2}" width="${B + t}" height="${B + t}" fill="none" stroke="${i.fill}" stroke-width="${t}"/>
+        ${rc(x - B / 2, cy - t / 2, B, t)}${rc(x - t / 2, cy - B / 2, t, B)}${rc(x - B * Math.SQRT1_2, cy - t / 2, 2 * B * Math.SQRT1_2, t, `transform="rotate(45 ${x} ${cy})"`)}
+        ${[-1, 1].map(sg => rc(x + sg * ta - t / 2, cy - Lt / 2, t, Lt) + rc(x - Lt / 2, cy + sg * ta - t / 2, Lt, t)).join('')}
+      </g>`;
+    }).join('');
+  } else if (pat === 'micro') {
+    const word = `IROGRAPH ${teeth}T`, pts = [4, 3, 2].map(p => (p / 72) * UM * Z);
+    let y = cy - pts.reduce((s, b) => s + b * 1.3, 0) / 2;
+    for (const fs of pts) {
+      y += fs;
+      body += inks.map(i => `<text x="${cx + i.err * Z}" y="${y}" font-size="${fs}" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle" fill="${i.fill}" ${sty(i)} opacity="${i.nom ? 0.55 : a}">${word}</text>`).join('');
+      y += fs * 0.3;
+    }
+  } else if (pat === 'circles') {
+    const ro = (RING_OD / 2) * Z, ri = ro - RING_BORDER * Z, p = RING_PITCH * Z;
+    for (const i of inks) for (let u = -1; u <= 1; u++) for (let v = -1; v <= 1; v++) body += `<path d="${ringPath(cx + i.err * Z + u * p, cy + v * p, ri, ro)}" fill="${i.fill}" fill-rule="evenodd" ${sty(i)} opacity="${op(i)}"/>`;
+  } else {
+    // A rosette needs its four process screens. Screens the factors do not carry sit at zero.
+    const Pp = (UM / LPI[pat]) * Z, PROCESS = { C: ['#00a3e0', 15], M: ['#e4007c', 75], Y: ['#f2d500', 0], K: ['#2b2a27', 45] };
+    const screens = inks.filter(i => !i.nom).map(i => ({ k: i.k, fill: i.fill, ang: i.ang, tint: i.k === 'K' ? 0.2 : 0.4, shift: i.err * Z, op: a }));
+    for (const k of ['C', 'M', 'Y', 'K']) if (!screens.some(sc => sc.k === k)) screens.push({ k, fill: PROCESS[k][0], ang: PROCESS[k][1], tint: k === 'K' ? 0.2 : 0.4, shift: 0, op: 1 });
+    body = screens.map(sc => {
+      defs += `<pattern id="ls${tag}${sc.k}" patternUnits="userSpaceOnUse" width="${Pp}" height="${Pp}" patternTransform="translate(${cx + sc.shift} ${cy}) rotate(${sc.ang})"><circle cx="${Pp / 2}" cy="${Pp / 2}" r="${Pp * Math.sqrt(sc.tint / Math.PI)}" fill="${sc.fill}"/></pattern>`;
+      return `<rect x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" fill="url(#ls${tag}${sc.k})" style="mix-blend-mode:multiply" opacity="${sc.op}"/>`;
+    }).join('');
+  }
+  return { defs, body };
+};
+const lensSvg = (marks, pat, teeth) => {
+  const W = 520, r = 118, cx = W / 2, cy = 130;
+  const maxUm = Math.max(0, ...marks.map(m => Math.abs(m.off))) * UM;
+  const Z = (r * 0.9) / lensHalf(pat, maxUm);
+  const { defs, body: lines } = lensMarks(marks, pat, Z, cx, cy, r, teeth);
+  // A rosette has no grey standard to read against, so its lens is split down
+  // the middle at one scale: every screen at zero on the left, as set on the right.
+  const split = !!LPI[pat], std = split ? lensMarks(marks.map(m => ({ ...m, off: 0 })), pat, Z, cx, cy, r, teeth, 'std') : null;
+  const half = (id, x) => `<clipPath id="${id}"><rect x="${x}" y="${cy - r - 2}" width="${r + 2}" height="${2 * r + 4}"/></clipPath>`;
+  const u =nearest([10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000], 40 / Z), t = nearest([1, 2, 5, 10, 20, 25, 50, 100, 200], 40 / Z / 25.4);
+  const bar = (x, len, label) => `<g stroke="var(--tx2)" stroke-width="1.5"><line x1="${x}" y1="268" x2="${x + len}" y2="268"/><line x1="${x}" y1="263" x2="${x}" y2="273"/><line x1="${x + len}" y1="263" x2="${x + len}" y2="273"/></g><text x="${x + len + 8}" y="272" font-size="12" fill="var(--mu)">${label}</text>`;
+  return `<svg viewBox="0 0 ${W} 284" width="100%" style="display:block;max-height:330px" role="img" aria-label="Magnified view at the end of the repeat">
+    <defs><clipPath id="lc"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>${defs}${split ? std.defs + half('lh0', cx - r - 2) + half('lh1', cx) : ''}</defs>
+    <text x="${cx - r - 14}" y="${cy + 4}" font-size="12" font-weight="700" fill="var(--mu)" text-anchor="end">◀ short</text>
+    <text x="${cx + r + 14}" y="${cy + 4}" font-size="12" font-weight="700" fill="var(--mu)">long ▶</text>
+    <g clip-path="url(#lc)"><rect x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" fill="#fbfaf6"/>${split ? `<g clip-path="url(#lh0)">${std.body}</g><g clip-path="url(#lh1)">${lines}</g>` : lines}</g>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--hair2)" stroke-width="1.5"/>
+    ${split ? `<line x1="${cx}" y1="${cy - r - 8}" x2="${cx}" y2="${cy + r + 8}" stroke="var(--tx)" stroke-width="2"/>
+    <text x="${cx - 76}" y="24" font-size="13" font-weight="700" fill="var(--tx)" text-anchor="end">Standard</text>
+    <text x="${cx + 76}" y="24" font-size="13" font-weight="700" fill="var(--tx)">As set</text>` : ''}
+    ${bar(110, u * Z, u >= 1000 ? `${u / 1000} mm` : `${u} µm`)}${bar(310, t * 25.4 * Z, `${t} thou`)}
+  </svg>`;
+};
+
+const stackSvg = (g, set) => {
+  const W = 580, H = 250, y0 = 222, colW = 104, cols = [
+    { x: 92, name: 'Standard', half: g.std / 2, tape: STACK.tape, plate: STACK.plate },
+    { x: 232, name: 'As set', half: set.bcd / 2, tape: state.tape, plate: state.plate },
+  ];
+  for (const c of cols) { c.back = c.half + c.tape + STACK.backing; c.face = c.half + c.tape + c.plate; }
+  const lo = Math.min(...cols.map(c => c.half)) - 0.014, hi = Math.max(g.rp, ...cols.map(c => c.face)) + 0.012;
+  const S = 196 / (hi - lo), Y = (rad) => y0 - (rad - lo) * S;
+  const layer = (c, a, b, fill) => `<rect x="${c.x}" y="${Y(b)}" width="${colW}" height="${Math.max(0, Y(a) - Y(b))}" fill="${fill}"/>`;
+  const body = cols.map(c => `
+    ${layer(c, lo, c.half, 'var(--steel)')}${layer(c, c.half, c.half + c.tape, 'var(--tape)')}${layer(c, c.half + c.tape, c.back, 'var(--backing)')}${layer(c, c.back, c.face, 'var(--polymer)')}
+    <line x1="${c.x - 6}" y1="${Y(c.back)}" x2="${c.x + colW + 6}" y2="${Y(c.back)}" stroke="var(--tx)" stroke-width="1.5"/>
+    <text x="${c.x + colW / 2}" y="${H - 6}" font-size="13" font-weight="700" fill="var(--tx)" text-anchor="middle">${c.name}</text>`).join('');
+  const s = cols[1], dBack = s.back - cols[0].back, dFace = s.face - g.rp, nx = s.x + colW + 14;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:330px" role="img" aria-label="The stack on the standard cylinder and as set">
+    ${body}
+    <line x1="8" y1="${Y(g.rp)}" x2="${s.x + colW + 8}" y2="${Y(g.rp)}" stroke="var(--pitch)" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="8" y="${Y(g.rp) - 5}" font-size="12" font-weight="700" fill="var(--pitch)">Pitch line</text>
+    <text x="${cols[0].x - 10}" y="${Y(cols[0].back) + 4}" font-size="12" fill="var(--mu)" text-anchor="end">Backing line</text>
+    <text x="${nx}" y="${Y(s.back) + 4}" font-size="12" fill="var(--tx)"><tspan font-weight="700">Backing line</tspan> <tspan class="mono">${way(dBack) ? `${sLen(dBack)}${mark()}` : 'as standard'}</tspan></text>
+    <text x="${nx}" y="${Y(s.back) + 20}" font-size="12" fill="var(--mu)">${way(dBack) ? `${dBack > 0 ? 'lifted' : 'lowered'}: prints ${dBack > 0 ? 'short' : 'long'}` : 'prints the full repeat'}</text>
+    <text x="${nx}" y="${Y(s.face) + 4}" font-size="12" fill="var(--tx)"><tspan font-weight="700">Face</tspan> <tspan class="mono">${way(dFace) ? `${fLen(Math.abs(dFace))}${mark()} ${dFace > 0 ? 'above' : 'below'} pitch` : 'on the pitch line'}</tspan></text>
+  </svg>`;
+};
+
+// ----- everything that follows the controls -----
+const update = () => {
+  document.documentElement.dataset.theme = state.theme;
+  const g = gear(state.teeth), R = g.R;
+  const tr = (o) => printed(g, o) - R;
+  const one = {
+    bcd: tr({ dBcd: state.dBcd }),
+    steel: tr({ dF: dF(), metal: 'steel' }), aluminium: tr({ dF: dF(), metal: 'aluminium' }),
+    plate: tr({ plate: state.plate }), tape: tr({ tape: state.tape }),
+  };
+  const all = Object.fromEntries(Object.keys(METAL).map(mt => [mt, tr({ dBcd: state.dBcd, dF: dF(), metal: mt, plate: state.plate, tape: state.tape })]));
+  const grow = (mt) => g.std * GROWTH[mt] * dF();
+
+  // the bar: top controls
+  $('metal').innerHTML = Object.keys(METAL).map(mt => btn('metal', mt, state.metal === mt, METAL[mt])).join('');
+  $('lens').innerHTML = ['in', 'mm'].map(v => btn('len', v, state.len === v, v)).join('');
+  $('temps').innerHTML = ['F', 'C'].map(v => btn('temp', v, state.temp === v, `°${v}`)).join('');
+  $('themes').innerHTML = [['dark', 'Dark'], ['light', 'Light']].map(([v, l]) => btn('theme', v, state.theme === v, l)).join('');
+  $('stackline').innerHTML = `Standard stack: plate <b class="mono">${fLen(STACK.plate, mm() ? 3 : 3)}</b>, backing <b class="mono">${fLen(STACK.backing, 3)}</b>, tape <b class="mono">${fLen(STACK.tape, 3)}</b>${mark()}`;
+
+  // facts
+  const perRad = Math.abs(printed(g, { tape: STACK.tape + 0.0005 }) - printed(g, { tape: STACK.tape - 0.0005 }));
+  const unitT = state.temp === 'C' ? 5 : 10, unitF = state.temp === 'C' ? 9 : 10;
+  const facts = [
+    ['Repeat', `${fLen(R)}${mark()}`, `${g.teeth} teeth × ${mm() ? fLen(STACK.cp) : STACK.cp}${mark()} CP`, false],
+    ['Standard BCD', fLen(g.std), `pitch − 2 × ${fLen(STACK.plate + STACK.tape, 3)}`, true],
+    ['Distortion', `${(g.dist * 100).toFixed(3)}%`, `plate made ${fLen(g.K)}${mark()} short`, true],
+    [mm() ? 'Each 0.01 mm of BCD' : 'Each 0.001" of BCD', fFine(tr({ dBcd: mm() ? 0.01 / 25.4 : 0.001 })), `${fineName()} at the end of the repeat`, false],
+    [`Each ${unitT}°${state.temp}, ${METAL[state.metal].toLowerCase()}`, fFine(tr({ dF: unitF, metal: state.metal })), `${fineName()} at the end of the repeat`, false],
+    [mm() ? 'Each 0.01 mm of tape' : 'Each 0.001" of tape', fFine(-perRad * (mm() ? 0.01 / 25.4 / 0.001 : 1)), `${fineName()} at the end of the repeat`, false],
+    [mm() ? 'Each 0.01 mm of plate' : 'Each 0.001" of plate', fFine(tr({ plate: STACK.plate + (mm() ? 0.01 / 25.4 : 0.001) })), `${fineName()} at the end of the repeat`, false],
+  ];
+  $('facts').innerHTML = facts.map(([k, v, sub, key]) => `<div class="fact${key ? ' key' : ''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`).join('');
+
+  // the shared travel scale: every bar on one axis
+  const steps = mm() ? [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000] : [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500];
+  const most = Math.max(...Object.values(one).map(v => Math.abs(fineOf(v))));
+  const lim = steps.find(x => x >= most * 1.02) || steps[steps.length - 1];
+  const X = (v) => 50 + Math.max(-1.08, Math.min(1.08, fineOf(v) / lim)) * 46;
+  const ticks = [-lim, -lim / 2, 0, lim / 2, lim];
+  const tl = (t) => (t === 0 ? '0' : `${t > 0 ? '+' : '−'}${Number(Math.abs(t).toFixed(2))}`);
+  $('axis').innerHTML = `<span class="l">◀ Short</span><span class="t">End travel, <span style="text-transform:none">${fineName()}</span></span><span class="r">Long ▶</span>${ticks.map(t => `<span style="left:${50 + (t / lim) * 46}%">${tl(t)}</span>`).join('')}`;
+  const grid = ticks.map(t => `<i class="g${t === 0 ? ' z' : ''}" style="left:${50 + (t / lim) * 46}%"></i>`).join('');
+  const mk = (v, ink) => (way(v) ? `<div class="mk"><b style="left:${Math.min(50, X(v))}%;width:${Math.abs(X(v) - 50)}%;background:${ink}"></b></div>` : '<div class="mk"><em>none</em></div>');
+  const trv = (v, pick = true) => `<div class="ln right${pick ? ' pick' : ''}"><span class="fig" style="font-weight:${pick ? 800 : 400}">${way(v) ? sLen(v) : fLen(0)}</span><small style="width:13ch;text-align:left">${way(v) ? `${fFine(v).replace(/^[+−]/, '')} ${fineName()} ${way(v)}` : 'no travel'}</small></div>`;
+
+  // a reset button is live only when its slider is off the standard; it keeps its slot either way
+  for (const b of document.querySelectorAll('[data-reset]')) b.disabled = near(state[b.dataset.reset], STANDARD[b.dataset.reset]);
+
+  // the simulated BCD reading
+  const rd = mm() ? 4 : 5;
+  $('std-bcd').textContent = `standard ${fLen(g.std)}${mark()}`;
+  $('bcdOut').textContent = fLen(g.std + state.dBcd, rd);
+  $('chg-bcd').innerHTML = `<div class="ln pick"><span class="fig">${way(state.dBcd) ? `${sLen(state.dBcd, rd)} ${state.dBcd > 0 ? 'larger' : 'smaller'}` : 'standard'}</span></div>`;
+  $('bar-bcd').innerHTML = grid + mk(one.bcd, 'var(--f-bcd)');
+  $('trv-bcd').innerHTML = trv(one.bcd);
+
+  // temperature: both metals, the chosen one first in weight
+  const metals = Object.keys(METAL);
+  $('dTout').textContent = fTemp(state.dT);
+  $('chg-temp').innerHTML = metals.map(mt => `<div class="ln${state.metal === mt ? ' pick' : ''}"><span class="who">${METAL[mt]}</span><span class="fig">BCD ${sLen(grow(mt), mm() ? 4 : 5) || fLen(0, mm() ? 4 : 5)}</span></div>`).join('');
+  $('bar-temp').innerHTML = grid + metals.map(mt => mk(one[mt], state.metal === mt ? 'var(--f-temp)' : '#8a8a8a')).join('');
+  $('trv-temp').innerHTML = metals.map(mt => trv(one[mt], state.metal === mt)).join('');
+
+  // plate
+  const dPlate = state.plate - STACK.plate, face = g.std / 2 + STACK.tape + state.plate - g.rp;
+  $('std-plate').textContent = `standard ${fLen(STACK.plate)}${mark()}`;
+  $('plateOut').textContent = fLen(state.plate);
+  $('plate-picks').innerHTML = PICKS.plate.map(v => btn('plate', v, near(state.plate, v), fLen(v, 3), 'sm')).join('');
+  $('chg-plate').innerHTML = `<div class="ln pick"><span class="fig">${way(dPlate) ? `${sLen(dPlate)} ${dPlate > 0 ? 'thicker' : 'thinner'}` : 'standard'}</span></div><div class="ln"><small>${way(face) ? `face ${fLen(Math.abs(face))} ${face > 0 ? 'above' : 'below'} pitch` : 'face on the pitch line'}</small></div>`;
+  $('bar-plate').innerHTML = grid + mk(one.plate, 'var(--f-plate)');
+  $('trv-plate').innerHTML = trv(one.plate);
+
+  // tape
+  const dTape = state.tape - STACK.tape;
+  $('std-tape').textContent = `standard ${fLen(STACK.tape)}${mark()}`;
+  $('tapeOut').textContent = fLen(state.tape);
+  $('tape-picks').innerHTML = PICKS.tape.map(v => btn('tape', v, near(state.tape, v), fLen(v, 3), 'sm')).join('');
+  $('chg-tape').innerHTML = `<div class="ln pick"><span class="fig">${way(dTape) ? `${sLen(dTape)} ${dTape > 0 ? 'thicker' : 'thinner'}` : 'standard'}</span></div>`;
+  $('bar-tape').innerHTML = grid + mk(one.tape, 'var(--f-tape)');
+  $('trv-tape').innerHTML = trv(one.tape);
+
+  // all four together, for the cylinder type picked: one figure above the stack
+  const tot = all[state.metal];
+  $('all-stat').innerHTML = `<span class="k">All together, ${METAL[state.metal].toLowerCase()}</span><span class="v">${way(tot) ? `${sLen(tot)}${mark()}` : `${fLen(0)}${mark()}`}</span><span class="s">${way(tot) ? `${fFine(tot).replace(/^[+−]/, '')} ${fineName()} ${way(tot)} at the end of the repeat` : 'no travel'} · prints ${fLen(R + tot)}${mark()}</span>`;
+
+  // the lens: the standard in grey, one ink per factor, and the three together
+  // Only the four changes together, in black, against the grey standard. In a
+  // rosette the black screen carries the travel and cyan, magenta and yellow sit at zero.
+  const marks = [
+    { name: 'Standard', ink: '#7a7972', off: 0, std: true },
+    { name: `All together, ${METAL[state.metal].toLowerCase()}`, ink: '#2b2a27', k: 'K', ang: 45, off: all[state.metal] },
+  ];
+  $('alphaOut').textContent = `${state.alpha}%`;
+  $('pats').innerHTML = PATTERNS.map(([v, label]) => `<button type="button" class="pill icon${state.pat === v ? ' on' : ''}" data-group="pat" data-value="${v}" aria-pressed="${state.pat === v}" title="${label}" aria-label="${label}">${PAT_ICON[v]()}${LPI[v] ? `<small>${LPI[v]}</small>` : ''}</button>`).join('');
+  $('lensdraw').innerHTML = lensSvg(marks, state.pat, g.teeth);
+  // The rosettes draw no grey standard, so the legend leaves it out there.
+  $('lens-legend').innerHTML = marks.filter(m => !(m.std && LPI[state.pat])).map(m => `<span><i style="background:${m.ink}"></i><b>${m.name}</b>${m.std ? '' : ` <span class="mono">${way(m.off) ? `${sLen(m.off)}${mark()}` : 'no travel'}</span>`}</span>`).join('');
+
+  // the stack
+  $('stackdraw').innerHTML = stackSvg(g, { bcd: (g.std + state.dBcd) * (1 + GROWTH[state.metal] * dF()) });
+  $('stack-legend').innerHTML = [['Cylinder', 'var(--steel)'], ['Tape', 'var(--tape)'], ['Backing', 'var(--backing)'], ['Polymer', 'var(--polymer)']].map(([l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
+};
+
+// ----- the sliders stay put while everything else is redrawn -----
+const setSliders = () => {
+  const lim = state.temp === 'C' ? 22 : 40;
+  Object.assign($('dT'), { min: -lim, max: lim, step: 1, value: state.dT });
+  Object.assign($('dBcd'), { min: -BCD_RANGE, max: BCD_RANGE, step: BCD_STEP, value: state.dBcd });
+  for (const k of ['plate', 'tape']) Object.assign($(k), { min: RANGE[k][0], max: RANGE[k][1], step: STEP, value: state[k] });
+  $('alpha').value = state.alpha;
+};
+// rounded to the finest step on the page, so a dragged value never carries float dust
+for (const k of ['dBcd', 'dT', 'plate', 'tape', 'alpha']) $(k).addEventListener('input', (e) => { state[k] = Number(Number(e.target.value).toFixed(5)); update(); });
+// The tooth count is typed. A figure that is not a whole number in range leaves the last good one standing.
+$('teeth').value = state.teeth;
+$('teeth').addEventListener('input', (e) => { const n = Number(e.target.value); if (Number.isInteger(n) && n >= 20 && n <= 250) { state.teeth = n; update(); } });
+// What each slider goes back to: the standard.
+const STANDARD = { dBcd: 0, dT: 0, plate: STACK.plate, tape: STACK.tape };
+document.addEventListener('click', (e) => {
+  const back = e.target.closest('[data-reset]');
+  if (back) { state[back.dataset.reset] = STANDARD[back.dataset.reset]; setSliders(); update(); return; }
+  const n = e.target.closest('[data-nudge]');
+  if (n) {
+    const k = n.dataset.nudge, by = Number(n.dataset.by) * (k === 'dT' ? 1 : k === 'dBcd' ? BCD_STEP : STEP), el = $(k);
+    state[k] = Math.max(Number(el.min), Math.min(Number(el.max), Number((state[k] + by).toFixed(5))));
+    setSliders(); update(); return;
+  }
+  const b = e.target.closest('button[data-group]');
+  if (!b) return;
+  const { group, value } = b.dataset;
+  if (group === 'temp' && value !== state.temp) state.dT = Math.round(value === 'C' ? state.dT / 1.8 : state.dT * 1.8);
+  state[group] = group === 'plate' || group === 'tape' ? Number(value) : value;
+  setSliders(); update();
+});
+
+const hash = window.location.hash.slice(1).split(',');
+if (hash.includes('light')) state.theme = 'light';
+if (hash.includes('mm')) state.len = 'mm';
+if (hash.includes('celsius')) { state.temp = 'C'; state.dT = 8; }
+if (hash.includes('alu')) state.metal = 'aluminium';
+// #example dials in the small example the demo page's screenshot was taken with.
+if (hash.includes('example')) Object.assign(state, { dBcd: 0.0002, dT: 15, plate: 0.0675, tape: 0.016 });
+const hp = PATTERNS.find(p => hash.includes(p[0]));
+if (hp) state.pat = hp[0];
+if (hash.includes('thin')) state.plate = 0.045;
+setSliders(); update();
+</script>
+</body>
+</html>

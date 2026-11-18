@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FLEXO Plate travel: demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* A presentation layer over one screenshot of FLEXO_PLATE_DRIFT.html (light,
+     1440 x 980). Each stop dims the page, leaves one part lit, and explains it
+     in a few bubbles. Everything is placed in the screenshot's own pixels and
+     the whole stage is scaled to fit the window. */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: #0b1220; color: #e5e7eb; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #fit { position: absolute; left: 0; right: 0; top: 0; bottom: 52px; }
+  #stage { position: absolute; left: 0; top: 0; width: 1440px; height: 980px; transform-origin: 0 0; background: #ffffff; overflow: hidden; }
+  #stage img, #stage svg { position: absolute; left: 0; top: 0; width: 1440px; height: 980px; display: block; }
+
+  .note { position: absolute; padding: 10px 14px 12px 16px; border-radius: 10px; background: #ffffff; color: #1f2937; border: 1px solid #cbd5e1; border-left: 6px solid var(--c, #2563eb); box-shadow: 0 10px 28px rgba(2, 6, 23, .45); }
+  .note h3 { margin: 0 0 3px; font-size: 16px; font-weight: 800; color: #0f172a; }
+  .note p { margin: 0; font-size: 14.5px; line-height: 1.42; }
+  .note b { font-weight: 700; color: #0f172a; }
+  .note.title { padding: 26px 32px 28px; border-left-width: 1px; text-align: center; }
+  .note.title h3 { font-size: 34px; letter-spacing: 1px; margin-bottom: 8px; }
+  .note.title h3 span { font-weight: 400; letter-spacing: 0; color: #64748b; margin-left: 10px; }
+  .note.title p { font-size: 17px; }
+  .note.title ol { margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .note.title li { padding: 4px 12px; border-radius: 999px; background: #eff6ff; border: 1px solid #bfdbfe; font-size: 14px; font-weight: 700; color: #1e3a8a; }
+
+  #bar { position: absolute; left: 0; right: 0; bottom: 0; height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #111827; border-top: 1px solid #1f2937; }
+  #bar button { height: 32px; padding: 0 14px; border-radius: 6px; border: 1px solid #374151; background: #1f2937; color: #f9fafb; font: inherit; font-weight: 700; cursor: pointer; }
+  #bar button:disabled { opacity: .35; cursor: default; }
+  #bar button:focus-visible, .dot:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+  #where { width: 62px; font-weight: 800; color: #9ca3af; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #name { font-size: 17px; font-weight: 800; color: #f9fafb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #dots { display: flex; gap: 6px; }
+  .dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid #374151; background: transparent; color: #9ca3af; font: inherit; font-weight: 800; cursor: pointer; }
+  .dot.on { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+  .sp { flex: 1; }
+  .hint { color: #6b7280; font-size: 12px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="fit">
+  <div id="stage">
+    <img src="FLEXO_PLATE_DRIFT_DEMO_files/screen-light.png" alt="FLEXO Plate travel, in light mode, with a 71 tooth example set">
+    <svg id="veil" viewBox="0 0 1440 980" aria-hidden="true"></svg>
+    <div id="notes"></div>
+  </div>
+</div>
+<div id="bar">
+  <span id="where"></span>
+  <span id="name"></span>
+  <span class="sp"></span>
+  <span class="hint">← → to move</span>
+  <span id="dots"></span>
+  <button type="button" id="back">Back</button>
+  <button type="button" id="next">Next</button>
+</div>
+
+<script>
+// Everything is in the screenshot's pixels (1440 x 980).
+//   lit    the parts left bright: [x, y, width, height]
+//   notes  the bubbles: where each sits, its colour, and the points it arrows to
+//          (and, rarely, the point an arrow leaves from)
+const W = 1440, H = 980;
+const BLUE = '#2563eb', BCD = '#00a3e0', TEMP = '#e4007c', PLATE = '#2e9e4f', TAPE = '#f07d1a', AMBER = '#b45309';
+const STEPS = [
+  {
+    name: 'FLEXO Plate travel',
+    lit: [],
+    notes: [{ x: 370, y: 330, w: 700, title: true,
+      h: 'FLEXO <span>Plate travel</span>',
+      p: 'How far the end of the repeat moves when the cylinder, its temperature, the plate or the tape is off standard.',
+      list: ['1 The standard', '2 The four sliders', '3 The result', '4 The lens', '5 The stack'] }],
+  },
+  {
+    name: 'The standard',
+    lit: [[12, 48, 1416, 136]],
+    notes: [
+      { x: 30, y: 216, w: 252, h: 'Tooth count', p: 'Type the gear’s tooth count. Teeth × pitch is the repeat: 71 × 0.125" = <b>8.875"</b>.', from: [198, 216], to: [[148, 90]] },
+      { x: 300, y: 216, w: 282, h: 'Cylinder type', p: 'Steel or aluminium. It decides how much the cylinder grows with heat.', to: [[372, 90]] },
+      { x: 600, y: 216, w: 342, h: 'The standard', p: 'The standard plate, backing and tape give the <b>Standard BCD</b>: the bare cylinder diameter that prints the repeat exactly.', to: [[609, 84]] },
+      { x: 960, y: 216, w: 440, h: 'What one step is worth', p: 'Each tile is one small change of one factor, in thousandths of an inch at the end of the repeat. <b>Minus prints short.</b>', to: [[1020, 182]] },
+    ],
+  },
+  {
+    name: 'The four sliders',
+    lit: [[217, 232, 394, 256]],
+    notes: [
+      { x: 664, y: 132, w: 430, c: BCD, h: 'Cylinder BCD', p: 'The bare cylinder as measured. Larger than standard lifts the plate off centre, so the repeat prints short. Here <b>+0.0002"</b> costs 0.66 thou.', to: [[608, 254]] },
+      { x: 664, y: 256, w: 430, c: TEMP, h: 'Cylinder temperature', p: 'Warmer than when it was measured. Metal grows with heat, aluminium about twice as much as steel. Here <b>+15°F</b> costs 0.85 thou on steel.', to: [[608, 311]] },
+      { x: 664, y: 380, w: 430, c: PLATE, h: 'Plate thickness', p: 'The plate on the cylinder. Art is made short for its plate, so a thicker plate carries shorter art. Here <b>+0.0005"</b> costs 3.29 thou.', to: [[608, 363]] },
+      { x: 664, y: 504, w: 430, c: TAPE, h: 'Mounting tape', p: 'The tape under the plate. Thicker tape lifts the plate just as a larger cylinder does. Here <b>+0.001"</b> costs 6.57 thou.', to: [[608, 436]] },
+      { x: 150, y: 520, w: 400, c: AMBER, h: 'Nudge, jump, reset', p: '<b>−</b> and <b>+</b> move one step. The buttons under a slider jump to common thicknesses. The amber button puts that slider back to standard.', to: [[589, 453]] },
+    ],
+  },
+  {
+    name: 'The result',
+    lit: [[604, 188, 826, 302]],
+    notes: [
+      { x: 170, y: 236, w: 380, h: 'Change', p: 'What the slider did against standard: how much larger, warmer or thicker. Temperature shows both metals; the bold one is the cylinder type chosen.', to: [[610, 311]] },
+      { x: 640, y: 522, w: 400, h: 'One scale for all four', p: 'Every bar shares the scale above. Left of the line prints short, right prints long. The longest bar is the biggest mover: here, the tape.', to: [[951, 464]] },
+      { x: 1070, y: 522, w: 345, h: 'End of repeat', p: 'The travel in inches, then in thousandths: how far the end of the repeat lands from where it should.', to: [[1330, 476]] },
+    ],
+  },
+  {
+    name: 'The lens',
+    lit: [[14, 496, 704, 435]],
+    notes: [
+      { x: 762, y: 512, w: 430, h: 'Test patterns', p: 'Six targets to read the travel on: crosshair, register mark, micro print, two rosettes and micro circles. <b>Ink</b> fades the black so the standard shows through.', to: [[705, 525]] },
+      { x: 762, y: 660, w: 430, h: 'Under the glass', p: '<b>Grey</b> is where the mark should land. <b>Black</b> is where it lands with all four changes together: 11.4 thou short here.', to: [[484, 638]] },
+      { x: 762, y: 800, w: 430, h: 'Scale', p: 'The two bars under the lens give its scale. On a rosette the lens splits: standard on the left, as set on the right.', to: [[516, 871]] },
+    ],
+  },
+  {
+    name: 'The stack',
+    lit: [[722, 496, 704, 435]],
+    notes: [
+      { x: 240, y: 512, w: 430, h: 'All together', p: 'The four changes at once, for the cylinder type chosen. This repeat prints <b>8.8636"</b> where 8.8750" was wanted.', to: [[730, 561]] },
+      { x: 240, y: 640, w: 430, h: 'The pitch line', p: 'The dashed line is the gear’s pitch line. The standard face sits on it; here the face is 0.0017" above.', to: [[746, 652]] },
+      { x: 240, y: 762, w: 430, h: 'The backing line', p: 'The art keeps its length at the plate’s backing. Lift that line off centre and each turn of the gear lays down less of it, so the print comes up short.', to: [[756, 780]] },
+    ],
+  },
+];
+
+const $ = (id) => document.getElementById(id);
+let step = 0;
+
+// The nearest point on a bubble's edge to where its arrow is going, kept off the corners.
+const edgePoint = (r, [tx, ty]) => {
+  const inX = tx >= r.x && tx <= r.x + r.w, inY = ty >= r.y && ty <= r.y + r.h, pad = 18;
+  const cx = Math.max(r.x + pad, Math.min(r.x + r.w - pad, tx)), cy = Math.max(r.y + pad, Math.min(r.y + r.h - pad, ty));
+  if (inX) return [cx, ty < r.y ? r.y : r.y + r.h];
+  if (inY) return [tx < r.x ? r.x : r.x + r.w, cy];
+  // off a corner: leave from whichever side faces the target more squarely
+  const dx = tx < r.x ? r.x - tx : tx - (r.x + r.w), dy = ty < r.y ? r.y - ty : ty - (r.y + r.h);
+  return dx > dy ? [tx < r.x ? r.x : r.x + r.w, cy] : [cx, ty < r.y ? r.y : r.y + r.h];
+};
+
+const show = () => {
+  const s = STEPS[step];
+  $('notes').innerHTML = s.notes.map((n, i) => `<div class="note${n.title ? ' title' : ''}" data-i="${i}" style="left:${n.x}px;top:${n.y}px;width:${n.w}px;--c:${n.c || BLUE}"><h3>${n.h}</h3><p>${n.p}</p>${n.list ? `<ol>${n.list.map(t => `<li>${t}</li>`).join('')}</ol>` : ''}</div>`).join('');
+  // The arrows start from the bubbles as laid out, so they are drawn after the text.
+  let arrows = '';
+  for (const el of $('notes').children) {
+    const n = s.notes[Number(el.dataset.i)], r = { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }, c = n.c || BLUE;
+    for (const to of n.to || []) {
+      // `from` starts an arrow at a chosen point, to steer it clear of something lit
+      const [x1, y1] = n.from || edgePoint(r, to), [x2, y2] = to, a = Math.atan2(y2 - y1, x2 - x1);
+      const head = (len, spread) => [[x2, y2], [x2 - len * Math.cos(a - spread), y2 - len * Math.sin(a - spread)], [x2 - len * Math.cos(a + spread), y2 - len * Math.sin(a + spread)]].map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+      const bx = x2 - 9 * Math.cos(a), by = y2 - 9 * Math.sin(a);
+      arrows += `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/><polygon points="${head(17, 0.5)}" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>`
+        + `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/><polygon points="${head(15, 0.42)}" fill="${c}"/>`;
+    }
+  }
+  const holes = s.lit.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10"`);
+  $('veil').innerHTML = `<defs><mask id="lit"><rect width="${W}" height="${H}" fill="#fff"/>${holes.map(h => `${h} fill="#000"/>`).join('')}</mask></defs>
+    <rect width="${W}" height="${H}" fill="#0f172a" fill-opacity="${s.lit.length ? 0.5 : 0.62}" mask="url(#lit)"/>
+    ${holes.map(h => `${h} fill="none" stroke="${BLUE}" stroke-width="3"/>`).join('')}${arrows}`;
+
+  $('where').textContent = step === 0 ? 'Start' : `${step} of ${STEPS.length - 1}`;
+  $('name').textContent = s.name;
+  $('dots').innerHTML = STEPS.map((x, i) => `<button type="button" class="dot${i === step ? ' on' : ''}" data-go="${i}" title="${x.name}" aria-label="${x.name}" aria-current="${i === step}">${i === 0 ? '•' : i}</button>`).join('');
+  $('back').disabled = step === 0;
+  $('next').disabled = step === STEPS.length - 1;
+  try { history.replaceState(null, '', `#${step}`); } catch { /* a file page that will not take it still works */ }
+};
+const go = (n) => { step = Math.max(0, Math.min(STEPS.length - 1, n)); show(); };
+const fit = () => {
+  const box = $('fit'), k = Math.min(box.clientWidth / W, box.clientHeight / H);
+  $('stage').style.transform = `translate(${(box.clientWidth - W * k) / 2}px, ${(box.clientHeight - H * k) / 2}px) scale(${k})`;
+};
+
+$('back').addEventListener('click', () => go(step - 1));
+$('next').addEventListener('click', () => go(step + 1));
+$('dots').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) go(Number(b.dataset.go)); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(step + 1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(step - 1); }
+  else if (e.key === 'Home') go(0);
+  else if (e.key === 'End') go(STEPS.length - 1);
+});
+window.addEventListener('resize', fit);
+const first = Number(window.location.hash.slice(1));
+if (Number.isInteger(first)) step = Math.max(0, Math.min(STEPS.length - 1, first));
+fit(); show();
+</script>
+</body>
+</html>
