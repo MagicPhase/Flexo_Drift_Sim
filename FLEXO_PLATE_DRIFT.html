@@ -36,8 +36,6 @@
   .head h1 span { margin-left: 8px; font-weight: 400; letter-spacing: 0; color: var(--mu); }
 
   .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-  .lsel { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 4px 0 9px; border: 1px solid var(--hair); border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--mu); }
-  .lsel input { width: 70px; border: 0; background: var(--bg); color: var(--tx); font-family: Consolas, monospace; font-size: 19px; font-weight: 800; height: 26px; text-align: right; }
   .pills { display: inline-flex; gap: 4px; flex-wrap: wrap; }
   .pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 30px; padding: 0 11px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--hair); background: transparent; color: var(--tx2); white-space: nowrap; }
   .pill.on { border-color: var(--pri); background: var(--on); color: var(--tx); }
@@ -49,13 +47,21 @@
   .ink input { width: 110px; margin: 0; accent-color: var(--pri); }
   .cap { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--mu); }
 
-  .facts { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  /* the top row: the tooth count in its own box, then the repeat, the standard BCD,
+     the distortion both ways, and the four factors together in one box */
+  .facts { display: grid; grid-template-columns: 150px minmax(140px, 1fr) minmax(140px, 1fr) minmax(200px, 1.25fr) minmax(620px, 4fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  #facts-rest { display: contents; }
   .fact { padding: 9px 12px; min-width: 0; background: var(--bg); }
   .fact.key { background: var(--bg2); }
-  .fact .k { font-size: 12px; color: var(--mu); white-space: nowrap; }
+  .fact .k { display: block; font-size: 12px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fact .v { font-size: 20px; font-weight: 800; font-family: Consolas, monospace; white-space: nowrap; }
+  .fact .v .hi { margin-left: 12px; color: var(--mu); }
   .fact .s { font-size: 12px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  @media (max-width: 1250px) { .facts { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  .fact.teeth input { display: block; width: 92px; height: 28px; padding: 0 6px; border: 1px solid var(--hair2); border-radius: 6px; background: var(--bg2); color: var(--tx); font-family: Consolas, monospace; font-size: 20px; font-weight: 800; }
+  .fact.four .each { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 12px; }
+  .fact.four .k i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  @media (max-width: 1320px) { .facts { grid-template-columns: repeat(4, minmax(0,1fr)); } .fact.four { grid-column: 1 / -1; } }
+  @media (max-width: 700px) { .facts { grid-template-columns: repeat(2, minmax(0,1fr)); } .fact.four .each { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; } }
 
   .panel { border: 1px solid var(--hair); border-radius: 8px; min-width: 0; margin-bottom: 12px; }
   .phead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--hair); }
@@ -115,15 +121,18 @@
   <div class="head"><h1>FLEXO <span>Plate travel</span></h1><span class="sp"></span><span class="pills" id="themes"></span></div>
 
   <div class="bar">
-    <label class="lsel">Teeth <input type="number" id="teeth" min="20" max="250" step="1" aria-label="Tooth count"></label>
-    <span class="cap" style="margin-left:6px">Cylinder <span class="pills" id="metal"></span></span>
+    <span class="cap">Cylinder <span class="pills" id="metal"></span></span>
     <span class="muted" id="stackline"></span>
     <span class="sp"></span>
     <span class="pills" id="lens"></span>
     <span class="pills" id="temps"></span>
   </div>
 
-  <div class="facts" id="facts"></div>
+  <!-- The tooth count box is fixed markup, so typing in it is never redrawn; the rest of the row is drawn by update(). -->
+  <div class="facts">
+    <div class="fact teeth"><label class="k" for="teeth">Tooth count</label><input type="number" id="teeth" min="20" max="250" step="1"><div class="s" id="pitch"></div></div>
+    <div id="facts-rest"></div>
+  </div>
 
   <section class="panel">
     <div class="scroll"><div class="rows">
@@ -370,16 +379,21 @@ const update = () => {
   // facts
   const perRad = Math.abs(printed(g, { tape: STACK.tape + 0.0005 }) - printed(g, { tape: STACK.tape - 0.0005 }));
   const unitT = state.temp === 'C' ? 5 : 10, unitF = state.temp === 'C' ? 9 : 10;
-  const facts = [
-    ['Repeat', `${fLen(R)}${mark()}`, `${g.teeth} teeth × ${mm() ? fLen(STACK.cp) : STACK.cp}${mark()} CP`, false],
-    ['Standard BCD', fLen(g.std), `pitch − 2 × ${fLen(STACK.plate + STACK.tape, 3)}`, true],
-    ['Distortion', `${(g.dist * 100).toFixed(3)}%`, `plate made ${fLen(g.K)}${mark()} short`, true],
-    [mm() ? 'Each 0.01 mm of BCD' : 'Each 0.001" of BCD', fFine(tr({ dBcd: mm() ? 0.01 / 25.4 : 0.001 })), `${fineName()} at the end of the repeat`, false],
-    [`Each ${unitT}°${state.temp}, ${METAL[state.metal].toLowerCase()}`, fFine(tr({ dF: unitF, metal: state.metal })), `${fineName()} at the end of the repeat`, false],
-    [mm() ? 'Each 0.01 mm of tape' : 'Each 0.001" of tape', fFine(-perRad * (mm() ? 0.01 / 25.4 / 0.001 : 1)), `${fineName()} at the end of the repeat`, false],
-    [mm() ? 'Each 0.01 mm of plate' : 'Each 0.001" of plate', fFine(tr({ plate: STACK.plate + (mm() ? 0.01 / 25.4 : 0.001) })), `${fineName()} at the end of the repeat`, false],
+  const cp = `${mm() ? fLen(STACK.cp) : STACK.cp}${mark()}`, pct = g.dist * 100;
+  const tile = (k, v, sub, key = false) => `<div class="fact${key ? ' key' : ''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  // The four factors, each by one step, in one box: what that step does at the end of the repeat.
+  const each = [
+    ['var(--f-bcd)', mm() ? 'Each 0.01 mm of BCD' : 'Each 0.001" of BCD', fFine(tr({ dBcd: mm() ? 0.01 / 25.4 : 0.001 }))],
+    ['var(--f-temp)', `Each ${unitT}°${state.temp}, ${METAL[state.metal].toLowerCase()}`, fFine(tr({ dF: unitF, metal: state.metal }))],
+    ['var(--f-tape)', mm() ? 'Each 0.01 mm of tape' : 'Each 0.001" of tape', fFine(-perRad * (mm() ? 0.01 / 25.4 / 0.001 : 1))],
+    ['var(--f-plate)', mm() ? 'Each 0.01 mm of plate' : 'Each 0.001" of plate', fFine(tr({ plate: STACK.plate + (mm() ? 0.01 / 25.4 : 0.001) }))],
   ];
-  $('facts').innerHTML = facts.map(([k, v, sub, key]) => `<div class="fact${key ? ' key' : ''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`).join('');
+  $('pitch').textContent = `${cp} circular pitch`;
+  $('facts-rest').innerHTML = tile('Repeat', `${fLen(R)}${mark()}`, `${g.teeth} teeth × ${cp} CP`)
+    + tile('Standard BCD', fLen(g.std), `pitch − 2 × ${fLen(STACK.plate + STACK.tape, 3)}`, true)
+    // the distortion both ways: how much shorter the plate is made, and what is left of the repeat
+    + tile('Distortion', `<span title="How much shorter the plate is made">${pct.toFixed(3)}%</span><span class="hi" title="The plate's length as a share of the repeat">${(100 - pct).toFixed(3)}%</span>`, `plate made ${fLen(g.K)}${mark()} short`, true)
+    + `<div class="fact four"><div class="each">${each.map(([ink, k, v]) => `<div><div class="k"><i style="background:${ink}"></i>${k}</div><div class="v">${v}</div></div>`).join('')}</div><div class="s">${fineName()} at the end of the repeat</div></div>`;
 
   // the shared travel scale: every bar on one axis
   const steps = mm() ? [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000] : [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500];

@@ -18,6 +18,8 @@ Type a tooth count, pick steel or aluminium, and move four sliders:
 | Plate thickness | The plate on the cylinder |
 | Mounting tape | The tape under the plate |
 
+The top row has the tooth count in a box of its own, then the repeat, the standard BCD, the distortion (how much shorter the plate is made, and what is left of the repeat), and one box for what a small step of each of the four factors is worth.
+
 Each row shows the change, a bar on one shared short / long scale, and the travel at the end of the repeat in inches and thousandths (or millimetres and micrometres). Each slider has its own reset button. Below the rows:
 
 - **At the end of the repeat:** a magnified view with the standard in grey and the four changes together in black, in six test patterns. On the two rosettes the view splits: standard on the left, as set on the right.
