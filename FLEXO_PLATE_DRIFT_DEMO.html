@@ -5,16 +5,18 @@
 <title>FLEXO Plate travel: demo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* A presentation layer over one screenshot of FLEXO_PLATE_DRIFT.html (light,
-     1440 x 980). Each stop dims the page, leaves one part lit, and explains it
-     in a few bubbles. Everything is placed in the screenshot's own pixels and
-     the whole stage is scaled to fit the window. */
+  /* A presentation layer over two screenshots of FLEXO_PLATE_DRIFT.html (light,
+     1440 x 980): one with the four changes all together, one across the face.
+     Each stop dims the page, leaves one part lit, and explains it in a few
+     bubbles. Everything is placed in the screenshots' own pixels and the whole
+     stage is scaled to fit the window. */
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body { margin: 0; background: #0b1220; color: #e5e7eb; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
   #fit { position: absolute; left: 0; right: 0; top: 0; bottom: 52px; }
   #stage { position: absolute; left: 0; top: 0; width: 1440px; height: 980px; transform-origin: 0 0; background: #ffffff; overflow: hidden; }
   #stage img, #stage svg { position: absolute; left: 0; top: 0; width: 1440px; height: 980px; display: block; }
+  #stage img[hidden] { display: none; }
 
   .note { position: absolute; padding: 10px 14px 12px 16px; border-radius: 10px; background: #ffffff; color: #1f2937; border: 1px solid #cbd5e1; border-left: 6px solid var(--c, #2563eb); box-shadow: 0 10px 28px rgba(2, 6, 23, .45); }
   .note h3 { margin: 0 0 3px; font-size: 16px; font-weight: 800; color: #0f172a; }
@@ -43,7 +45,8 @@
 <body>
 <div id="fit">
   <div id="stage">
-    <img src="FLEXO_PLATE_DRIFT_DEMO_files/screen-light.png" alt="FLEXO Plate travel, in light mode, with a 71 tooth example set">
+    <img id="shot-all" src="FLEXO_PLATE_DRIFT_DEMO_files/screen-light.png" alt="FLEXO Plate travel, in light mode, with a 71 tooth example set and the four changes all together">
+    <img id="shot-face" src="FLEXO_PLATE_DRIFT_DEMO_files/screen-face.png" alt="The same example across the face, with the tape 0.001 inch thicker at reading 4" hidden>
     <svg id="veil" viewBox="0 0 1440 980" aria-hidden="true"></svg>
     <div id="notes"></div>
   </div>
@@ -59,7 +62,8 @@
 </div>
 
 <script>
-// Everything is in the screenshot's pixels (1440 x 980).
+// Everything is in the screenshots' pixels (1440 x 980).
+//   face   true for a stop that stands on the across-the-face screenshot
 //   lit    the parts left bright: [x, y, width, height]
 //   notes  the bubbles: where each sits, its colour, and the points it arrows to
 //          (and, rarely, the point an arrow leaves from)
@@ -72,54 +76,70 @@ const STEPS = [
     notes: [{ x: 370, y: 330, w: 700, title: true,
       h: 'FLEXO <span>Plate travel</span>',
       p: 'How far the end of the repeat moves when the cylinder, its temperature, the plate or the tape is off standard.',
-      list: ['1 The standard', '2 The four sliders', '3 The result', '4 The lens', '5 The stack'] }],
+      list: ['1 The standard', '2 The four factors', '3 One slider', '4 The result', '5 Across the face', '6 The sheet'] }],
   },
   {
     name: 'The standard',
-    lit: [[12, 48, 1416, 136]],
+    lit: [[12, 50, 1416, 94]],
     notes: [
-      { x: 30, y: 216, w: 252, h: 'Tooth count', p: 'Type the gear’s tooth count in its box. Teeth × pitch is the repeat: 71 × 0.125" = <b>8.875"</b>.', to: [[140, 170]] },
-      { x: 300, y: 216, w: 270, h: 'Cylinder type', p: 'Steel or aluminium. It decides how much the cylinder grows with heat.', from: [372, 216], to: [[232, 88]] },
-      { x: 610, y: 216, w: 336, h: 'The standard', p: 'The standard plate, backing and tape give the <b>Standard BCD</b>: the bare cylinder that prints the repeat exactly. <b>Distortion</b> is how much shorter the plate is made: 4.389% off, so 95.611% of the repeat.', to: [[452, 140], [702, 140]] },
-      { x: 964, y: 216, w: 440, h: 'What one step is worth', p: 'One box, four figures: one small change of each factor, in thousandths of an inch at the end of the repeat, in the sliders’ colours. <b>Minus prints short.</b>', to: [[1040, 170]] },
+      { x: 30, y: 216, w: 262, h: 'Tooth count', p: 'Type the gear’s tooth count in its box. Teeth × pitch is the repeat: 71 × 0.125" = <b>8.875"</b>.', to: [[94, 138]] },
+      { x: 310, y: 216, w: 350, h: 'The standard', p: 'The standard plate, backing and tape give the <b>Standard BCD</b>: the bare cylinder that prints the repeat exactly. <b>Distortion</b> is how much shorter the plate is made: 4.389% off, so 95.611% of the repeat.', to: [[408, 138], [588, 138]] },
+      { x: 678, y: 216, w: 420, h: 'What one step is worth', p: 'One box, four figures: one small change of each factor, in thousandths of an inch at the end of the repeat, in the factors’ colours. <b>Minus prints short.</b>', to: [[1000, 138]] },
+      { x: 1116, y: 216, w: 296, h: 'Units', p: 'Inches or millimetres, °F or °C. The whole page reads in the units picked here.', to: [[1372, 138]] },
     ],
   },
   {
-    name: 'The four sliders',
-    lit: [[217, 232, 394, 256]],
+    name: 'The four factors',
+    lit: [[12, 144, 612, 255]],
     notes: [
-      { x: 664, y: 132, w: 430, c: BCD, h: 'Cylinder BCD', p: 'The bare cylinder as measured. Larger than standard lifts the plate off centre, so the repeat prints short. Here <b>+0.0002"</b> costs 0.66 thou.', to: [[608, 254]] },
-      { x: 664, y: 256, w: 430, c: TEMP, h: 'Cylinder temperature', p: 'Warmer than when it was measured. Metal grows with heat, aluminium about twice as much as steel. Here <b>+15°F</b> costs 0.85 thou on steel.', to: [[608, 311]] },
-      { x: 664, y: 380, w: 430, c: PLATE, h: 'Plate thickness', p: 'The plate on the cylinder. Art is made short for its plate, so a thicker plate carries shorter art. Here <b>+0.0005"</b> costs 3.29 thou.', to: [[608, 363]] },
-      { x: 664, y: 504, w: 430, c: TAPE, h: 'Mounting tape', p: 'The tape under the plate. Thicker tape lifts the plate just as a larger cylinder does. Here <b>+0.001"</b> costs 6.57 thou.', to: [[608, 436]] },
-      { x: 150, y: 520, w: 400, c: AMBER, h: 'Nudge, jump, reset', p: '<b>−</b> and <b>+</b> move one step. The buttons under a slider jump to common thicknesses. The amber button puts that slider back to standard.', to: [[589, 453]] },
+      { x: 720, y: 120, w: 620, c: BCD, h: 'Cylinder BCD', p: 'The bare cylinder as measured. Larger than standard lifts the plate off centre, so the repeat prints short. Here <b>+0.0002"</b> costs 0.66 thou.', to: [[616, 213]] },
+      { x: 720, y: 218, w: 620, c: TEMP, h: 'Temperature', p: 'Warmer than when it was measured. Metal grows with heat, aluminium about twice as much as steel. Here <b>+15°F</b> costs 0.85 thou on steel.', to: [[616, 264]] },
+      { x: 720, y: 316, w: 620, c: PLATE, h: 'Plate thickness', p: 'The plate on the cylinder. Art is made short for its plate, so a thicker plate carries shorter art. Here <b>+0.0005"</b> costs 3.29 thou.', to: [[616, 316]] },
+      { x: 720, y: 414, w: 620, c: TAPE, h: 'Mounting tape', p: 'The tape under the plate. Thicker tape lifts the plate just as a larger cylinder does. Here <b>+0.001"</b> costs 6.57 thou.', to: [[616, 367]] },
+      { x: 120, y: 450, w: 440, h: 'Reading a row', p: 'What it is set to, then a bar on one scale shared by all four: left of the line prints short, right prints long. Last, how far the end of the repeat lands from where it should.', to: [[248, 394], [382, 394], [518, 394]] },
+    ],
+  },
+  {
+    name: 'One slider',
+    lit: [[12, 337, 612, 136]],
+    notes: [
+      { x: 60, y: 196, w: 400, c: TAPE, h: 'In hand', p: 'Click a row to take that factor in hand. The row lights up and the slider under the list becomes its slider. Here it is the tape.', to: [[104, 341]] },
+      { x: 664, y: 300, w: 440, c: AMBER, h: 'Reset', p: 'The amber button at the end of a row puts that factor back to standard, across the face as well.', to: [[607, 367]] },
+      { x: 120, y: 520, w: 460, h: 'One slider, with jumps', p: '<b>−</b> and <b>+</b> move one step. The buttons under the slider jump to common thicknesses. With temperature in hand they pick steel or aluminium.', to: [[82, 464], [303, 432]] },
     ],
   },
   {
     name: 'The result',
-    lit: [[604, 188, 826, 302]],
+    lit: [[624, 144, 804, 614]],
     notes: [
-      { x: 170, y: 236, w: 380, h: 'Change', p: 'What the slider did against standard: how much larger, warmer or thicker. Temperature shows both metals; the bold one is the cylinder type chosen.', to: [[610, 311]] },
-      { x: 640, y: 522, w: 400, h: 'One scale for all four', p: 'Every bar shares the scale above. Left of the line prints short, right prints long. The longest bar is the biggest mover: here, the tape.', to: [[951, 464]] },
-      { x: 1070, y: 522, w: 345, h: 'End of repeat', p: 'The travel in inches, then in thousandths: how far the end of the repeat lands from where it should.', to: [[1330, 476]] },
+      { x: 770, y: 24, w: 430, h: 'Three views', p: '<b>All together</b> is the four changes at once. <b>Each</b> shows them one at a time, in their colours. <b>Across the face</b> comes next.', to: [[980, 159]] },
+      { x: 150, y: 150, w: 420, h: 'Test patterns', p: 'Six targets to read the travel on: crosshair, register mark, micro print, two rosettes and micro circles. <b>Ink</b> fades the black so the standard shows through.', to: [[640, 215]] },
+      { x: 150, y: 290, w: 420, h: 'All together', p: 'The four changes at once, for the cylinder type chosen. This repeat prints <b>8.8636"</b> where 8.8750" was wanted.', from: [570, 318], to: [[640, 264]] },
+      { x: 150, y: 420, w: 420, h: 'Under the glass', p: '<b>Grey</b> is where the mark should land. <b>Black</b> is where it lands with all four changes together: 11.4 thou short here.', to: [[912, 420]] },
+      { x: 900, y: 790, w: 430, h: 'Scale', p: 'The two bars under the lens give its scale. On a rosette the lens splits: standard on the left, as set on the right.', to: [[1120, 706]] },
     ],
   },
   {
-    name: 'The lens',
-    lit: [[14, 496, 704, 435]],
+    name: 'Across the face',
+    face: true,
+    lit: [[12, 462, 612, 512]],
     notes: [
-      { x: 762, y: 512, w: 430, h: 'Test patterns', p: 'Six targets to read the travel on: crosshair, register mark, micro print, two rosettes and micro circles. <b>Ink</b> fades the black so the standard shows through.', to: [[705, 525]] },
-      { x: 762, y: 660, w: 430, h: 'Under the glass', p: '<b>Grey</b> is where the mark should land. <b>Black</b> is where it lands with all four changes together: 11.4 thou short here.', to: [[484, 638]] },
-      { x: 762, y: 800, w: 430, h: 'Scale', p: 'The two bars under the lens give its scale. On a rosette the lens splits: standard on the left, as set on the right.', to: [[516, 871]] },
+      { x: 60, y: 318, w: 440, h: 'Face against the pitch line', p: 'How far the plate’s face stands off the gear’s pitch line at each of four readings across the cylinder.', to: [[118, 478]] },
+      { x: 664, y: 440, w: 470, c: PLATE, h: 'A cut through the cylinder', p: 'Cylinder, tape and plate, each with a strip in its own colour. Click a strip to take that layer in hand.', to: [[542, 630]] },
+      { x: 664, y: 548, w: 470, c: TAPE, h: 'Four readings', p: 'Drag a point to make the layer thicker or thinner there. The dashed rails are as far as a point goes. Here the tape is <b>0.001" thicker at reading 4</b>.', to: [[548, 710]] },
+      { x: 664, y: 690, w: 470, c: AMBER, h: 'Under each reading', p: '<b>−</b> and <b>+</b> move that reading one step. The amber button puts that one reading back.', to: [[611, 904]] },
+      { x: 720, y: 850, w: 620, h: 'Stiff or follows', p: 'A <b>stiff</b> plate will not stretch: it sits on the straight taper through the four readings and walks sideways. A plate that <b>follows</b> prints each reading at its own length. A real plate lies between the two.', to: [[188, 948]] },
     ],
   },
   {
-    name: 'The stack',
-    lit: [[722, 496, 704, 435]],
+    name: 'The sheet',
+    face: true,
+    lit: [[624, 144, 804, 729]],
     notes: [
-      { x: 240, y: 512, w: 430, h: 'All together', p: 'The four changes at once, for the cylinder type chosen. This repeat prints <b>8.8636"</b> where 8.8750" was wanted.', to: [[730, 561]] },
-      { x: 240, y: 640, w: 430, h: 'The pitch line', p: 'The dashed line is the gear’s pitch line. The standard face sits on it; here the face is 0.0017" above.', to: [[746, 652]] },
-      { x: 240, y: 762, w: 430, h: 'The backing line', p: 'The art keeps its length at the plate’s backing. Lift that line off centre and each turn of the gear lays down less of it, so the print comes up short.', to: [[756, 780]] },
+      { x: 760, y: 24, w: 430, h: 'Plate width', p: 'How wide the plate is across the cylinder. The four readings are spread evenly from one edge of it to the other.', to: [[1213, 213]] },
+      { x: 140, y: 196, w: 440, h: 'Four figures', p: 'How far out of square the tail edge is, how much the diagonals differ, how much the tail edge bows, and how far the tail has walked sideways: here <b>1.84 thou toward side 4</b>.', to: [[633, 275]] },
+      { x: 140, y: 372, w: 440, h: 'Corner lenses', p: 'A lens at each corner of the plate. It is laid down at the lead edge, so the lead corners show no travel. The tail corners show it both ways: along the web and sideways.', to: [[658, 442]] },
+      { x: 140, y: 528, w: 440, h: 'The sheet', p: 'The plate laid flat, lead edge on the left, standard in grey and as set in black. The figures at the tail are thou short at each reading. The travel is drawn <b>×100</b> so it can be seen.', to: [[848, 558]] },
     ],
   },
 ];
@@ -140,6 +160,8 @@ const edgePoint = (r, [tx, ty]) => {
 
 const show = () => {
   const s = STEPS[step];
+  $('shot-all').hidden = Boolean(s.face);
+  $('shot-face').hidden = !s.face;
   $('notes').innerHTML = s.notes.map((n, i) => `<div class="note${n.title ? ' title' : ''}" data-i="${i}" style="left:${n.x}px;top:${n.y}px;width:${n.w}px;--c:${n.c || BLUE}"><h3>${n.h}</h3><p>${n.p}</p>${n.list ? `<ol>${n.list.map(t => `<li>${t}</li>`).join('')}</ol>` : ''}</div>`).join('');
   // The arrows start from the bubbles as laid out, so they are drawn after the text.
   let arrows = '';
