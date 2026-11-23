@@ -35,7 +35,6 @@
   .head h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
   .head h1 span { margin-left: 8px; font-weight: 400; letter-spacing: 0; color: var(--mu); }
 
-  .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
   .pills { display: inline-flex; gap: 4px; flex-wrap: wrap; }
   .pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 30px; padding: 0 11px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--hair); background: transparent; color: var(--tx2); white-space: nowrap; }
   .pill.on { border-color: var(--pri); background: var(--on); color: var(--tx); }
@@ -49,7 +48,7 @@
 
   /* the top row: the tooth count in its own box, then the repeat, the standard BCD,
      the distortion both ways, and the four factors together in one box */
-  .facts { display: grid; grid-template-columns: 150px minmax(140px, 1fr) minmax(140px, 1fr) minmax(200px, 1.25fr) minmax(620px, 4fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .facts { display: grid; grid-template-columns: 150px minmax(140px, 1fr) minmax(140px, 1fr) minmax(200px, 1.25fr) minmax(600px, 4fr) auto; gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
   #facts-rest { display: contents; }
   .fact { padding: 9px 12px; min-width: 0; background: var(--bg); }
   .fact.key { background: var(--bg2); }
@@ -60,8 +59,12 @@
   .fact.teeth input { display: block; width: 92px; height: 28px; padding: 0 6px; border: 1px solid var(--hair2); border-radius: 6px; background: var(--bg2); color: var(--tx); font-family: Consolas, monospace; font-size: 20px; font-weight: 800; }
   .fact.four .each { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 12px; }
   .fact.four .k i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
-  @media (max-width: 1320px) { .facts { grid-template-columns: repeat(4, minmax(0,1fr)); } .fact.four { grid-column: 1 / -1; } }
-  @media (max-width: 700px) { .facts { grid-template-columns: repeat(2, minmax(0,1fr)); } .fact.four .each { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; } }
+  /* the units close the first line of the row, one pair over the other, whatever the row folds to */
+  /* its cell is never narrower than its buttons, and the row folds before the boxes beside it would have to give */
+  .fact.units { grid-column: -2 / -1; grid-row: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; min-width: max-content; }
+  .fact.units .pills { flex-wrap: nowrap; }
+  @media (max-width: 1380px) { .facts { grid-template-columns: repeat(4, minmax(0,1fr)) auto; } .fact.four { grid-column: 1 / -1; } }
+  @media (max-width: 700px) { .facts { grid-template-columns: repeat(2, minmax(0,1fr)); } .fact.four .each { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; } .fact.units { grid-column: 1 / -1; grid-row: auto; flex-direction: row; justify-content: flex-start; } }
 
   .panel { border: 1px solid var(--hair); border-radius: 8px; min-width: 0; margin-bottom: 12px; }
   .phead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--hair); }
@@ -84,8 +87,8 @@
   .nudge { display: inline-flex; align-items: center; justify-content: center; flex: none; }
   .nudge:disabled { opacity: .3; cursor: default; }
   /* a reset is amber while its slider is off the standard, and plain grey when there is nothing to reset */
-  .nudge[data-reset] { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
-  .nudge[data-reset]:disabled { color: var(--mu); border-color: var(--hair); background: transparent; }
+  .nudge[data-row-reset], .nudge[data-face-reset] { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .nudge[data-row-reset]:disabled, .nudge[data-face-reset]:disabled { color: var(--mu); border-color: var(--hair); background: transparent; }
   .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
   .ln { display: flex; align-items: center; gap: 6px; height: 22px; white-space: nowrap; font-size: 13px; }
   .ln .who { width: 72px; font-size: 12px; color: var(--mu); }
@@ -105,8 +108,7 @@
   .mk b { position: absolute; top: 5px; height: 12px; min-width: 2px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(128,128,128,.55); }
   .mk em { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); padding: 0 4px; font-style: normal; font-size: 11px; font-weight: 800; line-height: 16px; color: var(--mu); background: var(--bg); }
 
-  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-  @media (max-width: 1050px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .two { display: grid; gap: 12px; }
   .draw { padding: 10px 12px 12px; }
   .stat { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--hair); background: var(--bg2); }
   .stat .k { font-size: 12px; color: var(--mu); white-space: nowrap; }
@@ -114,76 +116,99 @@
   .stat .s { font-size: 12px; color: var(--mu); white-space: nowrap; }
   .legend { display: flex; flex-wrap: wrap; gap: 5px 16px; font-size: 12px; color: var(--tx2); margin-top: 6px; }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+
+  /* Across the face: the four BCD readings and the plate width, then what they do to the sheet */
+  .facebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 9px 12px; border-bottom: 1px solid var(--hair); }
+  .facebar[hidden], .facestats[hidden], .stat[hidden] { display: none; }
+  .facebar .top { flex: 1 0 100%; display: flex; align-items: center; gap: 10px; }
+  .wd { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-size: 13px; font-weight: 700; color: var(--tx2); }
+  .wd[hidden] { display: none; }
+  .wd input { width: 84px; height: 28px; padding: 0 6px; border: 1px solid var(--hair2); border-radius: 6px; background: var(--bg2); color: var(--tx); font-family: Consolas, monospace; font-size: 15px; font-weight: 800; }
+  .wd span { width: 3ch; color: var(--mu); }
+  /* One place to set things, on the left, and what they do beside it. The set panel stays in view while the result scrolls. */
+  .two { grid-template-columns: 600px minmax(0, 1fr); align-items: start; }
+  @media (min-width: 1201px) { .set { position: sticky; top: 8px; } }
+  @media (max-width: 1200px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  /* the four factors: a list to pick from, and what each does alone */
+  /* the last column is each factor's own reset, tucked at the end of its row */
+  .rowhd, .frow2 { display: grid; grid-template-columns: 168px 116px minmax(0, 1fr) 118px 40px; align-items: center; }
+  .frow2 > .rst { padding-left: 0; }
+  .rowhd { border-bottom: 1px solid var(--hair); }
+  .rowhd > div { padding: 5px 10px; min-width: 0; font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--mu); white-space: nowrap; }
+  .frow2 { width: 100%; padding: 0; border-width: 0 0 1px 3px; border-style: solid; border-color: transparent transparent var(--hair) transparent; background: transparent; text-align: left; cursor: pointer; }
+  .frow2:hover { background: var(--bg2); }
+  .frow2.on { background: var(--on); border-left-color: var(--ink); }
+  .frow2 > div { padding: 7px 10px; min-width: 0; }
+  .frow2 .fig { font-family: Consolas, monospace; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 800; white-space: nowrap; }
+  .frow2 small { display: block; font-size: 12px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .frow2 .end { text-align: right; }
+  /* the factor in hand as a whole: one slider, and a slot for its picks that is there whether it has any or not */
+  .whole { padding: 10px 12px 8px; border-bottom: 1px solid var(--hair); background: var(--bg2); }
+  .whole .cap { flex: none; }
+  .whole .sub { min-height: 24px; }
+  .cylbox { padding: 8px 10px 10px; border-bottom: 1px solid var(--hair); }
+  .set .facebar { border-bottom: 0; }
+  .pill i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+  #cylsvg [data-h] { cursor: ns-resize; outline: none; }
+  #cylsvg [data-h]:focus-visible + circle { stroke: var(--pri); stroke-width: 3; }
+  .fsteps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 4px; }
+  .fstep { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 3px; }
+  .fstep .nudge { width: 24px; height: 24px; }
+  .fstep output { width: 8.5ch; text-align: center; font-family: Consolas, monospace; font-size: 13px; font-weight: 800; white-space: nowrap; }
+  /* four figures: two by two beside The stack, in one row with the whole width, one column on a phone */
+  .facestats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hair); border-bottom: 1px solid var(--hair); }
+  .facestats .stat { border-bottom: 0; align-content: flex-start; }
+  .facestats .stat .s { white-space: normal; }
+  @media (min-width: 1380px) { .facestats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .facestats { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
 <div class="page">
   <div class="head"><h1>FLEXO <span>Plate travel</span></h1><span class="sp"></span><span class="pills" id="themes"></span></div>
 
-  <div class="bar">
-    <span class="cap">Cylinder <span class="pills" id="metal"></span></span>
-    <span class="muted" id="stackline"></span>
-    <span class="sp"></span>
-    <span class="pills" id="lens"></span>
-    <span class="pills" id="temps"></span>
-  </div>
-
-  <!-- The tooth count box is fixed markup, so typing in it is never redrawn; the rest of the row is drawn by update(). -->
+  <!-- The tooth count box is fixed markup, so typing in it is never redrawn; the rest of the row is drawn by update().
+       The units the page reads in close the row: inches or millimetres, and °F or °C. -->
   <div class="facts">
     <div class="fact teeth"><label class="k" for="teeth">Tooth count</label><input type="number" id="teeth" min="20" max="250" step="1"><div class="s" id="pitch"></div></div>
     <div id="facts-rest"></div>
+    <div class="fact units"><span class="pills" id="lens"></span><span class="pills" id="temps"></span></div>
   </div>
 
-  <section class="panel">
-    <div class="scroll"><div class="rows">
-      <div class="frow hd"><div>Factor</div><div>Set to</div><div>Change</div><div><div class="axis" id="axis"></div></div><div style="text-align:right">End of repeat</div></div>
-
-      <div class="frow">
-        <div><div class="fname"><i style="background:var(--f-bcd)"></i>Cylinder BCD</div><div class="fstd" id="std-bcd"></div></div>
-        <div><div class="ctl"><button type="button" class="nudge" data-nudge="dBcd" data-by="-1" aria-label="Smaller BCD">−</button><input type="range" id="dBcd" aria-label="Measured BCD"><button type="button" class="nudge" data-nudge="dBcd" data-by="1" aria-label="Larger BCD">+</button><output id="bcdOut"></output><button type="button" class="nudge" data-reset="dBcd" title="Back to standard" aria-label="Set the BCD back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div></div>
-        <div id="chg-bcd"></div><div><div class="marks" id="bar-bcd"></div></div><div id="trv-bcd"></div>
+  <!-- One place to set things, on the left, and what they do, on the right.
+       The four factors are a list to pick from: the one picked is in hand. Under
+       the list, one slider moves the factor in hand as a whole, and the cut
+       through the cylinder moves it at each of four readings across the face.
+       The slider, the drawing and the steppers are fixed markup, so nothing
+       being dragged or typed is ever redrawn; the list is drawn by update(). -->
+  <div class="two" id="two">
+    <section class="panel set">
+      <div class="rowhd"><div>Factor</div><div>Set to</div><div><div class="axis" id="axis"></div></div><div style="text-align:right">End of repeat</div><div></div></div>
+      <div id="rows"></div>
+      <div class="whole">
+        <div class="ctl"><span class="cap" id="wholeCap"></span><button type="button" class="nudge" data-whole="-1" aria-label="Down">−</button><input type="range" id="whole" aria-label="The factor in hand, as a whole"><button type="button" class="nudge" data-whole="1" aria-label="Up">+</button><output id="wholeOut"></output></div>
+        <div class="sub"><span class="pills" id="picks"></span></div>
       </div>
 
-      <div class="frow">
-        <div><div class="fname"><i style="background:var(--f-temp)"></i>Cylinder temperature</div><div class="fstd">against when it was measured</div></div>
-        <div><div class="ctl"><button type="button" class="nudge" data-nudge="dT" data-by="-1" aria-label="Colder">−</button><input type="range" id="dT" aria-label="Temperature change"><button type="button" class="nudge" data-nudge="dT" data-by="1" aria-label="Warmer">+</button><output id="dTout"></output><button type="button" class="nudge" data-reset="dT" title="Back to standard" aria-label="Set the temperature back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div></div>
-        <div id="chg-temp"></div><div><div class="marks" id="bar-temp"></div></div><div id="trv-temp"></div>
+      <div class="cylbox"><div id="facecyl"></div><div class="fsteps" id="facesteps"></div></div>
+      <div class="facebar">
+        <div class="top"><span class="cap">Plate <span class="pills" id="flexes"></span></span></div>
       </div>
+    </section>
 
-      <div class="frow">
-        <div><div class="fname"><i style="background:var(--f-plate)"></i>Plate thickness</div><div class="fstd" id="std-plate"></div></div>
-        <div>
-          <div class="ctl"><button type="button" class="nudge" data-nudge="plate" data-by="-1" aria-label="Thinner plate">−</button><input type="range" id="plate" aria-label="Plate thickness"><button type="button" class="nudge" data-nudge="plate" data-by="1" aria-label="Thicker plate">+</button><output id="plateOut"></output><button type="button" class="nudge" data-reset="plate" title="Back to standard" aria-label="Set the plate thickness back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-          <div class="sub"><span class="pills" id="plate-picks"></span></div>
-        </div>
-        <div id="chg-plate"></div><div><div class="marks" id="bar-plate"></div></div><div id="trv-plate"></div>
-      </div>
-
-      <div class="frow">
-        <div><div class="fname"><i style="background:var(--f-tape)"></i>Mounting tape</div><div class="fstd" id="std-tape"></div></div>
-        <div>
-          <div class="ctl"><button type="button" class="nudge" data-nudge="tape" data-by="-1" aria-label="Thinner tape">−</button><input type="range" id="tape" aria-label="Tape thickness"><button type="button" class="nudge" data-nudge="tape" data-by="1" aria-label="Thicker tape">+</button><output id="tapeOut"></output><button type="button" class="nudge" data-reset="tape" title="Back to standard" aria-label="Set the tape thickness back to standard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-          <div class="sub"><span class="pills" id="tape-picks"></span></div>
-        </div>
-        <div id="chg-tape"></div><div><div class="marks" id="bar-tape"></div></div><div id="trv-tape"></div>
-      </div>
-    </div></div>
-  </section>
-
-  <div class="two">
     <section class="panel">
       <div class="phead">
         <h2>At the end of the repeat</h2>
+        <span class="pills" id="shows"></span>
         <span class="sp"></span>
         <label class="ink" title="Ink opacity in the lens: lower it to see through overlapping inks">Ink <input type="range" id="alpha" min="20" max="100" step="5" aria-label="Ink opacity in the lens"><span class="mono" id="alphaOut" style="width:4ch;text-align:right"></span></label>
         <span class="pills" id="pats"></span>
+        <!-- The plate width belongs to the sheet, so it shows only when the sheet does. Fixed markup, so typing in it is never redrawn. -->
+        <label class="wd" id="widthbar" hidden>Plate width <input type="number" id="width" step="any" aria-label="Plate width"><span id="widthUnit"></span></label>
       </div>
-      <div class="draw"><div id="lensdraw"></div><div class="legend" id="lens-legend"></div></div>
-    </section>
-    <section class="panel">
-      <div class="phead"><h2>The stack</h2><span class="muted">To scale through its thickness</span></div>
       <div class="stat" id="all-stat"></div>
-      <div class="draw"><div id="stackdraw"></div><div class="legend" id="stack-legend"></div></div>
+      <div class="facestats" id="face-stat" hidden></div>
+      <div class="draw"><div id="lensdraw"></div><div class="legend" id="lens-legend"></div></div>
     </section>
   </div>
 </div>
@@ -213,11 +238,25 @@ const printed = (g, { dBcd = 0, dF = 0, metal = 'steel', plate = STACK.plate, ta
 
 // dBcd is the simulated reading against the standard BCD, which moves with the tooth count.
 // It opens with every slider at the standard.
-const state = { teeth: 71, metal: 'steel', dBcd: 0, dT: 0, plate: STACK.plate, tape: STACK.tape, pat: 'cross', alpha: 100, len: 'in', temp: 'F', theme: 'dark' };
+// `face` holds four simulated readings across the face for each of the three
+// things that can differ from one edge of the plate to the other: the
+// cylinder's BCD, the tape and the plate. Each is against its own row above,
+// and the four are evenly spaced from edge to edge. Temperature is one figure
+// for the whole cylinder. `hand` is the factor in hand: bcd, temp, plate or
+// tape. `width` is the plate's width in inches.
+const state = { teeth: 71, metal: 'steel', dBcd: 0, dT: 0, plate: STACK.plate, tape: STACK.tape, face: { bcd: [0, 0, 0, 0], tape: [0, 0, 0, 0], plate: [0, 0, 0, 0] }, hand: 'bcd', width: 13, flex: 'stiff', pat: 'cross', alpha: 100, show: 'all', len: 'in', temp: 'F', theme: 'dark' };
 const BCD_RANGE = 0.003, BCD_STEP = 0.00005;
+const WIDTH_RANGE = [2, 80];
+const CATS = {
+  // every reading has the same reach in height: 0.003" either way (REACH, where the drawing is made). The BCD is a diameter, so it reads twice that.
+  bcd: { name: 'BCD', ink: 'var(--f-bcd)', lim: 0.006, step: BCD_STEP },
+  tape: { name: 'Tape', ink: 'var(--f-tape)', lim: 0.003, step: STEP },
+  plate: { name: 'Plate', ink: 'var(--f-plate)', lim: 0.003, step: STEP },
+};
 const PATTERNS = [['cross', 'Crosshair'], ['mark', 'Register mark'], ['micro', 'Micro print'], ['ros175', 'Rosette 175'], ['ros300', 'Rosette 300'], ['circles', 'Micro circles']];
 const LPI = { ros175: 175, ros300: 300 };
 const $ = (id) => document.getElementById(id);
+const RESET_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
 
 // ----- figures -----
 const sgn = (v) => (v > 5e-7 ? '+' : v < -5e-7 ? '−' : '');
@@ -267,21 +306,22 @@ const lensHalf = (pat, maxEnd) => (pat === 'cross' ? Math.max(maxEnd * 1.3 + LW,
         : Math.max(900, 2 * maxEnd));
 const ringPath = (x, y, r0, r1) => `M${x - r1},${y} a${r1},${r1} 0 1,0 ${2 * r1},0 a${r1},${r1} 0 1,0 ${-2 * r1},0 Z M${x - r0},${y} a${r0},${r0} 0 1,1 ${2 * r0},0 a${r0},${r0} 0 1,1 ${-2 * r0},0 Z`;
 const lensMarks = (marks, pat, Z, cx, cy, r, teeth, tag = '') => {
-  const inks = marks.map(m => ({ nom: !!m.std, fill: m.ink, ang: m.ang, k: m.k, err: m.off * UM }));
+  // `off` moves a mark along the repeat, `side` across it (down the lens is toward reading 4). Only Across the face sets `side`.
+  const inks = marks.map(m => ({ nom: !!m.std, fill: m.ink, ang: m.ang, k: m.k, err: m.off * UM, up: (m.side || 0) * UM }));
   const a = state.alpha / 100, sty = (i) => (i.nom ? '' : 'style="mix-blend-mode:multiply"'), op = (i) => (i.nom ? 1 : a);
   let defs = '', body = '';
   if (pat === 'cross') {
     const lw = Math.max(1.5, LW * Z);
-    body = inks.map(i => `<g ${sty(i)} opacity="${op(i)}" stroke="${i.fill}" stroke-width="${lw}"><line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}"/><line x1="${cx + i.err * Z}" y1="${cy - r}" x2="${cx + i.err * Z}" y2="${cy + r}"/></g>`).join('');
+    body = inks.map(i => `<g ${sty(i)} opacity="${op(i)}" stroke="${i.fill}" stroke-width="${lw}"><line x1="${cx - r}" y1="${cy + i.up * Z}" x2="${cx + r}" y2="${cy + i.up * Z}"/><line x1="${cx + i.err * Z}" y1="${cy - r}" x2="${cx + i.err * Z}" y2="${cy + r}"/></g>`).join('');
   } else if (pat === 'mark') {
     const B = MARK_BOX * Z, t = MARK_LINE * Z, Lt = MARK_TICK * Z, ta = MARK_AT * Z;
     body = inks.map((i, n) => {
-      const x = cx + i.err * Z, id = `lm${n}`, rc = (rx, ry, w, h, extra = '') => `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${i.fill}" ${extra}/>`;
-      defs += `<clipPath id="${id}"><rect x="${x - B / 2 - t}" y="${cy - B / 2 - t}" width="${B + 2 * t}" height="${B + 2 * t}"/></clipPath>`;
+      const x = cx + i.err * Z, y = cy + i.up * Z, id = `lm${tag}${n}`, rc = (rx, ry, w, h, extra = '') => `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${i.fill}" ${extra}/>`;
+      defs += `<clipPath id="${id}"><rect x="${x - B / 2 - t}" y="${y - B / 2 - t}" width="${B + 2 * t}" height="${B + 2 * t}"/></clipPath>`;
       return `<g clip-path="url(#${id})" ${sty(i)} opacity="${op(i)}">
-        <rect x="${x - B / 2 - t / 2}" y="${cy - B / 2 - t / 2}" width="${B + t}" height="${B + t}" fill="none" stroke="${i.fill}" stroke-width="${t}"/>
-        ${rc(x - B / 2, cy - t / 2, B, t)}${rc(x - t / 2, cy - B / 2, t, B)}${rc(x - B * Math.SQRT1_2, cy - t / 2, 2 * B * Math.SQRT1_2, t, `transform="rotate(45 ${x} ${cy})"`)}
-        ${[-1, 1].map(sg => rc(x + sg * ta - t / 2, cy - Lt / 2, t, Lt) + rc(x - Lt / 2, cy + sg * ta - t / 2, Lt, t)).join('')}
+        <rect x="${x - B / 2 - t / 2}" y="${y - B / 2 - t / 2}" width="${B + t}" height="${B + t}" fill="none" stroke="${i.fill}" stroke-width="${t}"/>
+        ${rc(x - B / 2, y - t / 2, B, t)}${rc(x - t / 2, y - B / 2, t, B)}${rc(x - B * Math.SQRT1_2, y - t / 2, 2 * B * Math.SQRT1_2, t, `transform="rotate(45 ${x} ${y})"`)}
+        ${[-1, 1].map(sg => rc(x + sg * ta - t / 2, y - Lt / 2, t, Lt) + rc(x - Lt / 2, y + sg * ta - t / 2, Lt, t)).join('')}
       </g>`;
     }).join('');
   } else if (pat === 'micro') {
@@ -289,71 +329,165 @@ const lensMarks = (marks, pat, Z, cx, cy, r, teeth, tag = '') => {
     let y = cy - pts.reduce((s, b) => s + b * 1.3, 0) / 2;
     for (const fs of pts) {
       y += fs;
-      body += inks.map(i => `<text x="${cx + i.err * Z}" y="${y}" font-size="${fs}" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle" fill="${i.fill}" ${sty(i)} opacity="${i.nom ? 0.55 : a}">${word}</text>`).join('');
+      body += inks.map(i => `<text x="${cx + i.err * Z}" y="${y + i.up * Z}" font-size="${fs}" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle" fill="${i.fill}" ${sty(i)} opacity="${i.nom ? 0.55 : a}">${word}</text>`).join('');
       y += fs * 0.3;
     }
   } else if (pat === 'circles') {
     const ro = (RING_OD / 2) * Z, ri = ro - RING_BORDER * Z, p = RING_PITCH * Z;
-    for (const i of inks) for (let u = -1; u <= 1; u++) for (let v = -1; v <= 1; v++) body += `<path d="${ringPath(cx + i.err * Z + u * p, cy + v * p, ri, ro)}" fill="${i.fill}" fill-rule="evenodd" ${sty(i)} opacity="${op(i)}"/>`;
+    for (const i of inks) for (let u = -1; u <= 1; u++) for (let v = -1; v <= 1; v++) body += `<path d="${ringPath(cx + i.err * Z + u * p, cy + i.up * Z + v * p, ri, ro)}" fill="${i.fill}" fill-rule="evenodd" ${sty(i)} opacity="${op(i)}"/>`;
   } else {
     // A rosette needs its four process screens. Screens the factors do not carry sit at zero.
     const Pp = (UM / LPI[pat]) * Z, PROCESS = { C: ['#00a3e0', 15], M: ['#e4007c', 75], Y: ['#f2d500', 0], K: ['#2b2a27', 45] };
-    const screens = inks.filter(i => !i.nom).map(i => ({ k: i.k, fill: i.fill, ang: i.ang, tint: i.k === 'K' ? 0.2 : 0.4, shift: i.err * Z, op: a }));
-    for (const k of ['C', 'M', 'Y', 'K']) if (!screens.some(sc => sc.k === k)) screens.push({ k, fill: PROCESS[k][0], ang: PROCESS[k][1], tint: k === 'K' ? 0.2 : 0.4, shift: 0, op: 1 });
+    const screens = inks.filter(i => !i.nom).map(i => ({ k: i.k, fill: i.fill, ang: i.ang, tint: i.k === 'K' ? 0.2 : 0.4, shift: i.err * Z, rise: i.up * Z, op: a }));
+    for (const k of ['C', 'M', 'Y', 'K']) if (!screens.some(sc => sc.k === k)) screens.push({ k, fill: PROCESS[k][0], ang: PROCESS[k][1], tint: k === 'K' ? 0.2 : 0.4, shift: 0, rise: 0, op: 1 });
     body = screens.map(sc => {
-      defs += `<pattern id="ls${tag}${sc.k}" patternUnits="userSpaceOnUse" width="${Pp}" height="${Pp}" patternTransform="translate(${cx + sc.shift} ${cy}) rotate(${sc.ang})"><circle cx="${Pp / 2}" cy="${Pp / 2}" r="${Pp * Math.sqrt(sc.tint / Math.PI)}" fill="${sc.fill}"/></pattern>`;
+      defs += `<pattern id="ls${tag}${sc.k}" patternUnits="userSpaceOnUse" width="${Pp}" height="${Pp}" patternTransform="translate(${cx + sc.shift} ${cy + sc.rise}) rotate(${sc.ang})"><circle cx="${Pp / 2}" cy="${Pp / 2}" r="${Pp * Math.sqrt(sc.tint / Math.PI)}" fill="${sc.fill}"/></pattern>`;
       return `<rect x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" fill="url(#ls${tag}${sc.k})" style="mix-blend-mode:multiply" opacity="${sc.op}"/>`;
     }).join('');
   }
   return { defs, body };
 };
-const lensSvg = (marks, pat, teeth) => {
+// One lens at (cx, cy): the paper, the marks and the ring. `tag` keeps its ids
+// its own when several lenses share a drawing.
+// A rosette has no grey standard to read against, so its lens is split down
+// the middle at one scale: every screen at zero on the left, as set on the right.
+const lensAt = (marks, pat, Z, cx, cy, r, teeth, tag = '') => {
+  const split = !!LPI[pat];
+  const { defs, body: lines } = lensMarks(marks, pat, Z, cx, cy, r, teeth, tag);
+  const std = split ? lensMarks(marks.map(m => ({ ...m, off: 0, side: 0 })), pat, Z, cx, cy, r, teeth, `${tag}std`) : null;
+  const half = (id, x) => `<clipPath id="${id}"><rect x="${x}" y="${cy - r - 2}" width="${r + 2}" height="${2 * r + 4}"/></clipPath>`;
+  return {
+    defs: `<clipPath id="lc${tag}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>${defs}${split ? std.defs + half(`lh0${tag}`, cx - r - 2) + half(`lh1${tag}`, cx) : ''}`,
+    body: `<g clip-path="url(#lc${tag})"><rect x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" fill="#fbfaf6"/>${split ? `<g clip-path="url(#lh0${tag})">${std.body}</g><g clip-path="url(#lh1${tag})">${lines}</g>` : lines}</g>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--hair2)" stroke-width="1.5"/>
+    ${split ? `<line x1="${cx}" y1="${cy - r - 8}" x2="${cx}" y2="${cy + r + 8}" stroke="var(--tx)" stroke-width="2"/>` : ''}`,
+  };
+};
+// The two scale bars under a lens drawn at Z pixels per micrometre. They sit
+// either side of `mid`, the middle of the drawing.
+const lensBars = (Z, y, mid = 260) => {
+  const u = nearest([10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000], 40 / Z), t = nearest([1, 2, 5, 10, 20, 25, 50, 100, 200], 40 / Z / 25.4);
+  const bar = (x, len, label) => `<g stroke="var(--tx2)" stroke-width="1.5"><line x1="${x}" y1="${y}" x2="${x + len}" y2="${y}"/><line x1="${x}" y1="${y - 5}" x2="${x}" y2="${y + 5}"/><line x1="${x + len}" y1="${y - 5}" x2="${x + len}" y2="${y + 5}"/></g><text x="${x + len + 8}" y="${y + 4}" font-size="12" fill="var(--mu)">${label}</text>`;
+  return bar(mid - 150, u * Z, u >= 1000 ? `${u / 1000} mm` : `${u} µm`) + bar(mid + 50, t * 25.4 * Z, `${t} thou`);
+};
+// The four changes together, in one lens. `tall` lets it grow when the lens
+// panel has the whole width.
+const lensSvg = (marks, pat, teeth, tall) => {
   const W = 520, r = 118, cx = W / 2, cy = 130;
   const maxUm = Math.max(0, ...marks.map(m => Math.abs(m.off))) * UM;
   const Z = (r * 0.9) / lensHalf(pat, maxUm);
-  const { defs, body: lines } = lensMarks(marks, pat, Z, cx, cy, r, teeth);
-  // A rosette has no grey standard to read against, so its lens is split down
-  // the middle at one scale: every screen at zero on the left, as set on the right.
-  const split = !!LPI[pat], std = split ? lensMarks(marks.map(m => ({ ...m, off: 0 })), pat, Z, cx, cy, r, teeth, 'std') : null;
-  const half = (id, x) => `<clipPath id="${id}"><rect x="${x}" y="${cy - r - 2}" width="${r + 2}" height="${2 * r + 4}"/></clipPath>`;
-  const u =nearest([10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000], 40 / Z), t = nearest([1, 2, 5, 10, 20, 25, 50, 100, 200], 40 / Z / 25.4);
-  const bar = (x, len, label) => `<g stroke="var(--tx2)" stroke-width="1.5"><line x1="${x}" y1="268" x2="${x + len}" y2="268"/><line x1="${x}" y1="263" x2="${x}" y2="273"/><line x1="${x + len}" y1="263" x2="${x + len}" y2="273"/></g><text x="${x + len + 8}" y="272" font-size="12" fill="var(--mu)">${label}</text>`;
-  return `<svg viewBox="0 0 ${W} 284" width="100%" style="display:block;max-height:330px" role="img" aria-label="Magnified view at the end of the repeat">
-    <defs><clipPath id="lc"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>${defs}${split ? std.defs + half('lh0', cx - r - 2) + half('lh1', cx) : ''}</defs>
+  const lens = lensAt(marks, pat, Z, cx, cy, r, teeth);
+  return `<svg viewBox="0 0 ${W} 284" width="100%" style="display:block;max-height:${tall ? 460 : 330}px" role="img" aria-label="Magnified view at the end of the repeat">
+    <defs>${lens.defs}</defs>
     <text x="${cx - r - 14}" y="${cy + 4}" font-size="12" font-weight="700" fill="var(--mu)" text-anchor="end">◀ short</text>
     <text x="${cx + r + 14}" y="${cy + 4}" font-size="12" font-weight="700" fill="var(--mu)">long ▶</text>
-    <g clip-path="url(#lc)"><rect x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" fill="#fbfaf6"/>${split ? `<g clip-path="url(#lh0)">${std.body}</g><g clip-path="url(#lh1)">${lines}</g>` : lines}</g>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--hair2)" stroke-width="1.5"/>
-    ${split ? `<line x1="${cx}" y1="${cy - r - 8}" x2="${cx}" y2="${cy + r + 8}" stroke="var(--tx)" stroke-width="2"/>
-    <text x="${cx - 76}" y="24" font-size="13" font-weight="700" fill="var(--tx)" text-anchor="end">Standard</text>
+    ${lens.body}
+    ${LPI[pat] ? `<text x="${cx - 76}" y="24" font-size="13" font-weight="700" fill="var(--tx)" text-anchor="end">Standard</text>
     <text x="${cx + 76}" y="24" font-size="13" font-weight="700" fill="var(--tx)">As set</text>` : ''}
-    ${bar(110, u * Z, u >= 1000 ? `${u / 1000} mm` : `${u} µm`)}${bar(310, t * 25.4 * Z, `${t} thou`)}
+    ${lensBars(Z, 268)}
+  </svg>`;
+};
+// Each change alone, in a lens of its own: two by two, in the order of the
+// slider rows, all four at one scale, so a small travel looks small beside a
+// large one. Each lens carries its change's name and colour above and its
+// travel below. A rosette is black on every lens, as it is for all together:
+// its other three screens are the process colours and sit at zero.
+// With The stack beside it the panel is half the page, and the lenses go two
+// by two. With The stack hidden the panel has the whole width, and the four
+// go side by side, each one larger. `cols` is 2 or 4.
+const STD_MARK = { name: 'Standard', ink: '#7a7972', off: 0, std: true }, BLACK = { ink: '#2b2a27', k: 'K', ang: 45 };
+const QUAD_CELL = 260, QUAD = { 2: { r: 92, rowH: 256, max: 620 }, 4: { r: 110, rowH: 292, max: 460 } };
+const quadSvg = (each, pat, teeth, cols) => {
+  const { r, rowH, max } = QUAD[cols], W = cols * QUAD_CELL, split = !!LPI[pat];
+  const Z = (r * 0.9) / lensHalf(pat, Math.max(0, ...each.map(e => Math.abs(e.off))) * UM);
+  let defs = '', body = '';
+  each.forEach((e, i) => {
+    const cx = QUAD_CELL * ((i % cols) + 0.5), top = Math.floor(i / cols) * rowH, cy = top + 34 + r, ink = split ? BLACK : e;
+    const lens = lensAt([STD_MARK, { ink: ink.ink, k: ink.k, ang: ink.ang, off: e.off }], pat, Z, cx, cy, r, teeth, e.key);
+    defs += lens.defs;
+    body += `<text x="${cx}" y="${top + 14}" font-size="13" font-weight="800" fill="var(--tx)" text-anchor="middle">${e.name}</text>
+    <rect x="${cx - 12}" y="${top + 20}" width="24" height="4" rx="1" fill="${e.color}"/>
+    ${lens.body}
+    ${split ? `<text x="${cx - r}" y="${cy - r + 10}" font-size="11" font-weight="700" fill="var(--mu)">Standard</text>
+    <text x="${cx + r}" y="${cy - r + 10}" font-size="11" font-weight="700" fill="var(--mu)" text-anchor="end">As set</text>` : ''}
+    <text x="${cx}" y="${cy + r + 20}" font-size="13" fill="var(--mu)" text-anchor="middle">${way(e.off) ? `<tspan class="mono" font-weight="800" fill="var(--tx)">${sLen(e.off)}${mark()}</tspan><tspan dx="8">${fFine(e.off).replace(/^[+−]/, '')} ${fineName()} ${way(e.off)}</tspan>` : 'no travel'}</text>`;
+  });
+  const barY = Math.ceil(each.length / cols) * rowH + 12;
+  return `<svg viewBox="0 0 ${W} ${barY + 16}" width="100%" style="display:block;max-height:${max}px" role="img" aria-label="Magnified views at the end of the repeat, one for each change alone">
+    <defs>${defs}</defs>
+    ${body}
+    <text x="2" y="${barY + 4}" font-size="12" font-weight="700" fill="var(--mu)">◀ short</text>
+    <text x="${W - 2}" y="${barY + 4}" font-size="12" font-weight="700" fill="var(--mu)" text-anchor="end">long ▶</text>
+    ${lensBars(Z, barY, W / 2)}
   </svg>`;
 };
 
-const stackSvg = (g, set) => {
-  const W = 580, H = 250, y0 = 222, colW = 104, cols = [
-    { x: 92, name: 'Standard', half: g.std / 2, tape: STACK.tape, plate: STACK.plate },
-    { x: 232, name: 'As set', half: set.bcd / 2, tape: state.tape, plate: state.plate },
+// Across the face: the cylinder is not one diameter from edge to edge, so the
+// repeat is not one length. Each of the four readings prints its own length,
+// measured from the lead edge, which stays square. The sheet is drawn in the
+// middle, the standard in grey and as set in black, with the travel drawn
+// larger than life so it can be seen, and a lens sits at each corner, all four
+// at one scale. Between two readings the tail edge is a straight line: nothing
+// is known there.
+// `side` is how far the tail has walked across the cylinder, toward reading 4
+// when positive. The plate is laid square at the lead edge, so the walk grows
+// with the square of the distance round: the two side edges are parabolas.
+const FACE_ROOM = 56;
+const faceSvg = (t, side, pat, teeth, R, wide, tall) => {
+  const W = 820, r = 86, LX = 104, RX = W - 104, TY = 132, BY = 380, split = !!LPI[pat], GREY = STD_MARK.ink, INK = BLACK.ink;
+  const most = Math.max(Math.abs(side), ...t.map(Math.abs)), Z = (r * 0.9) / lensHalf(pat, most * UM);
+  // the sheet, to scale until it would be too thin to read
+  const s = Math.min(190 / R, 200 / wide), pw = Math.max(60, R * s), ph = Math.max(54, wide * s), sx = pw / R;
+  const x0 = 400 - pw / 2, x1 = x0 + pw, y0 = 256 - ph / 2, yAt = (i) => y0 + (ph * i) / 3;
+  // The travel is drawn larger than life at a scale that holds still, so the
+  // drift is seen to grow and shrink as a reading is moved. The scales are
+  // ten times apart (×1,000, ×100, ×10), and the one used is the largest that
+  // keeps the largest travel inside the room round the sheet (FACE_ROOM
+  // pixels). It goes by the figures alone, so the same settings are always
+  // drawn the same, and it changes at the same point on the way up as on the
+  // way down. A travel under half a thou is drawn small, as it is in the lens.
+  const ex = Math.max(1, 10 ** Math.floor(Math.log10(FACE_ROOM / (Math.max(most, 0.0005) * sx)))), tx = (i) => x1 + t[i] * sx * ex;
+  const dy = side * (ph / wide) * ex, yT = (i) => yAt(i) + dy;
+  const corners = [
+    { key: 'l1', name: 'Lead 1', cx: LX, cy: TY, off: 0, side: 0, px: x0, py: yAt(0) },
+    { key: 't1', name: 'Tail 1', cx: RX, cy: TY, off: t[0], side, px: tx(0), py: yT(0) },
+    { key: 'l4', name: 'Lead 4', cx: LX, cy: BY, off: 0, side: 0, px: x0, py: yAt(3) },
+    { key: 't4', name: 'Tail 4', cx: RX, cy: BY, off: t[3], side, px: tx(3), py: yT(3) },
   ];
-  for (const c of cols) { c.back = c.half + c.tape + STACK.backing; c.face = c.half + c.tape + c.plate; }
-  const lo = Math.min(...cols.map(c => c.half)) - 0.014, hi = Math.max(g.rp, ...cols.map(c => c.face)) + 0.012;
-  const S = 196 / (hi - lo), Y = (rad) => y0 - (rad - lo) * S;
-  const layer = (c, a, b, fill) => `<rect x="${c.x}" y="${Y(b)}" width="${colW}" height="${Math.max(0, Y(a) - Y(b))}" fill="${fill}"/>`;
-  const body = cols.map(c => `
-    ${layer(c, lo, c.half, 'var(--steel)')}${layer(c, c.half, c.half + c.tape, 'var(--tape)')}${layer(c, c.half + c.tape, c.back, 'var(--backing)')}${layer(c, c.back, c.face, 'var(--polymer)')}
-    <line x1="${c.x - 6}" y1="${Y(c.back)}" x2="${c.x + colW + 6}" y2="${Y(c.back)}" stroke="var(--tx)" stroke-width="1.5"/>
-    <text x="${c.x + colW / 2}" y="${H - 6}" font-size="13" font-weight="700" fill="var(--tx)" text-anchor="middle">${c.name}</text>`).join('');
-  const s = cols[1], dBack = s.back - cols[0].back, dFace = s.face - g.rp, nx = s.x + colW + 14;
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:330px" role="img" aria-label="The stack on the standard cylinder and as set">
-    ${body}
-    <line x1="8" y1="${Y(g.rp)}" x2="${s.x + colW + 8}" y2="${Y(g.rp)}" stroke="var(--pitch)" stroke-width="1.5" stroke-dasharray="6 4"/>
-    <text x="8" y="${Y(g.rp) - 5}" font-size="12" font-weight="700" fill="var(--pitch)">Pitch line</text>
-    <text x="${cols[0].x - 10}" y="${Y(cols[0].back) + 4}" font-size="12" fill="var(--mu)" text-anchor="end">Backing line</text>
-    <text x="${nx}" y="${Y(s.back) + 4}" font-size="12" fill="var(--tx)"><tspan font-weight="700">Backing line</tspan> <tspan class="mono">${way(dBack) ? `${sLen(dBack)}${mark()}` : 'as standard'}</tspan></text>
-    <text x="${nx}" y="${Y(s.back) + 20}" font-size="12" fill="var(--mu)">${way(dBack) ? `${dBack > 0 ? 'lifted' : 'lowered'}: prints ${dBack > 0 ? 'short' : 'long'}` : 'prints the full repeat'}</text>
-    <text x="${nx}" y="${Y(s.face) + 4}" font-size="12" fill="var(--tx)"><tspan font-weight="700">Face</tspan> <tspan class="mono">${way(dFace) ? `${fLen(Math.abs(dFace))}${mark()} ${dFace > 0 ? 'above' : 'below'} pitch` : 'on the pitch line'}</tspan></text>
-  </svg>`;
+  let defs = '', lenses = '', leads = '';
+  for (const c of corners) {
+    const lens = lensAt([STD_MARK, { ...BLACK, off: c.off, side: c.side }], pat, Z, c.cx, c.cy, r, teeth, c.key);
+    const d = Math.hypot(c.px - c.cx, c.py - c.cy);
+    defs += lens.defs;
+    leads += `<line x1="${c.px}" y1="${c.py}" x2="${c.cx + ((c.px - c.cx) * r) / d}" y2="${c.cy + ((c.py - c.cy) * r) / d}" stroke="var(--hair2)" stroke-width="1"/>`;
+    lenses += `<text x="${c.cx}" y="${c.cy - r - 12}" font-size="13" font-weight="800" fill="var(--tx)" text-anchor="middle">${c.name}</text>
+    ${lens.body}
+    ${split ? `<text x="${c.cx - r}" y="${c.cy - r + 10}" font-size="11" font-weight="700" fill="var(--mu)">Standard</text>
+    <text x="${c.cx + r}" y="${c.cy - r + 10}" font-size="11" font-weight="700" fill="var(--mu)" text-anchor="end">As set</text>` : ''}
+    <text x="${c.cx}" y="${c.cy + r + 20}" font-size="13" fill="var(--mu)" text-anchor="middle">${way(c.off) ? `<tspan class="mono" font-weight="800" fill="var(--tx)">${sLen(c.off)}${mark()}</tspan><tspan dx="8">${fFine(c.off).replace(/^[+−]/, '')} ${fineName()} ${way(c.off)}</tspan>` : 'no travel'}</text>
+    ${way(c.side) ? `<text x="${c.cx}" y="${c.cy + r + 37}" font-size="13" fill="var(--mu)" text-anchor="middle"><tspan class="mono" font-weight="800" fill="var(--tx)">${fLen(Math.abs(c.side))}${mark()}</tspan><tspan dx="8">${fFine(c.side).replace(/^[+−]/, '')} ${fineName()} toward ${c.side > 0 ? 4 : 1}</tspan></text>` : ''}`;
+  }
+  // the figure beside a corner reading steps clear of the line to its lens
+  const figY = [14, 4, 4, -6];
+  const sheet = `<rect x="222" y="70" width="376" height="372" rx="6" fill="#fbfaf6"/>
+    ${leads}
+    <rect x="${x0}" y="${y0}" width="${pw}" height="${ph}" fill="none" stroke="${GREY}" stroke-width="1.5"/>
+    <path d="M${x0},${y0} Q${(x0 + tx(0)) / 2},${y0} ${tx(0)},${yT(0)} ${t.map((_, i) => `L${tx(i)},${yT(i)}`).join(' ')} Q${(x0 + tx(3)) / 2},${yAt(3)} ${x0},${yAt(3)} Z" fill="${INK}" fill-opacity=".06" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
+    <g stroke="${INK}" stroke-width="1" stroke-dasharray="5 4" opacity=".55"><line x1="${x0}" y1="${y0}" x2="${tx(3)}" y2="${yT(3)}"/><line x1="${x0}" y1="${yAt(3)}" x2="${tx(0)}" y2="${yT(0)}"/></g>
+    <text x="${x0}" y="${y0 - 10 + Math.min(0, dy)}" font-size="11" font-weight="700" fill="${GREY}" text-anchor="middle">Lead</text>
+    <text x="${x1}" y="${y0 - 10 + Math.min(0, dy)}" font-size="11" font-weight="700" fill="${GREY}" text-anchor="middle">Tail</text>
+    ${t.map((v, i) => `<line x1="${x0 - 8}" y1="${yAt(i)}" x2="${x0}" y2="${yAt(i)}" stroke="${INK}" stroke-width="1.5"/>
+    <text x="${x0 - 13}" y="${yAt(i) + 4}" font-size="12" font-weight="800" fill="${INK}" text-anchor="end">${i + 1}</text>
+    <circle cx="${tx(i)}" cy="${yT(i)}" r="3.5" fill="${INK}"/>
+    <text x="${Math.max(tx(i), x1) + 9}" y="${yT(i) + figY[i]}" font-size="11" class="mono" fill="${INK}">${way(v) ? fFine(v) : '0'}</text>`).join('')}`;
+  return { ex, svg: `<svg viewBox="0 0 ${W} 546" width="100%" style="display:block;max-height:${tall ? 640 : 560}px" role="img" aria-label="The printed sheet with a magnified view at each corner">
+    <defs>${defs}</defs>
+    ${sheet}
+    ${lenses}
+    <text x="2" y="534" font-size="12" font-weight="700" fill="var(--mu)">◀ short</text>
+    <text x="${W - 2}" y="534" font-size="12" font-weight="700" fill="var(--mu)" text-anchor="end">long ▶</text>
+    ${lensBars(Z, 530, W / 2)}
+  </svg>` };
 };
 
 // ----- everything that follows the controls -----
@@ -361,20 +495,22 @@ const update = () => {
   document.documentElement.dataset.theme = state.theme;
   const g = gear(state.teeth), R = g.R;
   const tr = (o) => printed(g, o) - R;
+  // One lens and the list of factors stand for the middle of the plate: where
+  // the BCD, the tape or the plate differs across the face, they take the four
+  // readings' average. The sheet, across the face, is where the difference shows.
+  const F = state.face, avg = (a) => a.reduce((s, v) => s + v, 0) / a.length, midBcd = state.dBcd + avg(F.bcd), midTape = state.tape + avg(F.tape), midPlate = state.plate + avg(F.plate);
   const one = {
-    bcd: tr({ dBcd: state.dBcd }),
+    bcd: tr({ dBcd: midBcd }),
     steel: tr({ dF: dF(), metal: 'steel' }), aluminium: tr({ dF: dF(), metal: 'aluminium' }),
-    plate: tr({ plate: state.plate }), tape: tr({ tape: state.tape }),
+    plate: tr({ plate: midPlate }), tape: tr({ tape: midTape }),
   };
-  const all = Object.fromEntries(Object.keys(METAL).map(mt => [mt, tr({ dBcd: state.dBcd, dF: dF(), metal: mt, plate: state.plate, tape: state.tape })]));
+  const all = Object.fromEntries(Object.keys(METAL).map(mt => [mt, tr({ dBcd: midBcd, dF: dF(), metal: mt, plate: midPlate, tape: midTape })]));
   const grow = (mt) => g.std * GROWTH[mt] * dF();
 
   // the bar: top controls
-  $('metal').innerHTML = Object.keys(METAL).map(mt => btn('metal', mt, state.metal === mt, METAL[mt])).join('');
-  $('lens').innerHTML = ['in', 'mm'].map(v => btn('len', v, state.len === v, v)).join('');
-  $('temps').innerHTML = ['F', 'C'].map(v => btn('temp', v, state.temp === v, `°${v}`)).join('');
+  $('lens').innerHTML = ['in', 'mm'].map(v => btn('len', v, state.len === v, v, 'sm')).join('');
+  $('temps').innerHTML = ['F', 'C'].map(v => btn('temp', v, state.temp === v, `°${v}`, 'sm')).join('');
   $('themes').innerHTML = [['dark', 'Dark'], ['light', 'Light']].map(([v, l]) => btn('theme', v, state.theme === v, l)).join('');
-  $('stackline').innerHTML = `Standard stack: plate <b class="mono">${fLen(STACK.plate, mm() ? 3 : 3)}</b>, backing <b class="mono">${fLen(STACK.backing, 3)}</b>, tape <b class="mono">${fLen(STACK.tape, 3)}</b>${mark()}`;
 
   // facts
   const perRad = Math.abs(printed(g, { tape: STACK.tape + 0.0005 }) - printed(g, { tape: STACK.tape - 0.0005 }));
@@ -400,96 +536,301 @@ const update = () => {
   const most = Math.max(...Object.values(one).map(v => Math.abs(fineOf(v))));
   const lim = steps.find(x => x >= most * 1.02) || steps[steps.length - 1];
   const X = (v) => 50 + Math.max(-1.08, Math.min(1.08, fineOf(v) / lim)) * 46;
-  const ticks = [-lim, -lim / 2, 0, lim / 2, lim];
+  const ticks = [-lim, 0, lim];
   const tl = (t) => (t === 0 ? '0' : `${t > 0 ? '+' : '−'}${Number(Math.abs(t).toFixed(2))}`);
-  $('axis').innerHTML = `<span class="l">◀ Short</span><span class="t">End travel, <span style="text-transform:none">${fineName()}</span></span><span class="r">Long ▶</span>${ticks.map(t => `<span style="left:${50 + (t / lim) * 46}%">${tl(t)}</span>`).join('')}`;
+  $('axis').innerHTML = `<span class="l">◀ Short</span><span class="t" style="text-transform:none">${fineName()}</span><span class="r">Long ▶</span>${ticks.map(t => `<span style="left:${50 + (t / lim) * 46}%">${tl(t)}</span>`).join('')}`;
   const grid = ticks.map(t => `<i class="g${t === 0 ? ' z' : ''}" style="left:${50 + (t / lim) * 46}%"></i>`).join('');
   const mk = (v, ink) => (way(v) ? `<div class="mk"><b style="left:${Math.min(50, X(v))}%;width:${Math.abs(X(v) - 50)}%;background:${ink}"></b></div>` : '<div class="mk"><em>none</em></div>');
-  const trv = (v, pick = true) => `<div class="ln right${pick ? ' pick' : ''}"><span class="fig" style="font-weight:${pick ? 800 : 400}">${way(v) ? sLen(v) : fLen(0)}</span><small style="width:13ch;text-align:left">${way(v) ? `${fFine(v).replace(/^[+−]/, '')} ${fineName()} ${way(v)}` : 'no travel'}</small></div>`;
 
-  // a reset button is live only when its slider is off the standard; it keeps its slot either way
-  for (const b of document.querySelectorAll('[data-reset]')) b.disabled = near(state[b.dataset.reset], STANDARD[b.dataset.reset]);
+  // The four factors, a list to pick from: the one picked is in hand. A row
+  // gives what the factor is set to as a whole, whether it differs across the
+  // face, and what it does alone at the end of the repeat.
+  const rd = mm() ? 4 : 5, dPlate = state.plate - STACK.plate, dTape = state.tape - STACK.tape;
+  const uneven = (k) => !!F[k] && F[k].some(v => !near(v, 0)), off = (v, up, down, d) => (way(v) ? `${sLen(v, d)} ${v > 0 ? up : down}` : 'standard');
+  const end = (v) => `<div class="fig">${way(v) ? sLen(v) : fLen(0)}${mark()}</div><small>${way(v) ? `${fFine(v).replace(/^[+−]/, '')} ${fineName()} ${way(v)}` : 'no travel'}</small>`;
+  const rows = [
+    { key: 'bcd', name: 'Cylinder BCD', ink: 'var(--f-bcd)', set: fLen(g.std + state.dBcd, rd), chg: off(state.dBcd, 'larger', 'smaller', rd), v: one.bcd },
+    { key: 'temp', name: 'Temperature', note: `${METAL[state.metal].toLowerCase()} cylinder`, ink: 'var(--f-temp)', set: fTemp(state.dT), chg: `BCD ${sLen(grow(state.metal), rd)}`, v: one[state.metal] },
+    { key: 'plate', name: 'Plate thickness', ink: 'var(--f-plate)', set: fLen(state.plate), chg: off(dPlate, 'thicker', 'thinner'), v: one.plate },
+    { key: 'tape', name: 'Mounting tape', ink: 'var(--f-tape)', set: fLen(state.tape), chg: off(dTape, 'thicker', 'thinner'), v: one.tape },
+  ];
+  // Each row ends in its own reset, which puts that factor back to standard
+  // altogether: as a whole, and at each reading across the face. It is live
+  // only when there is something to put back, and keeps its slot either way.
+  // A row cannot be a button with a button inside it, so it is a block that
+  // acts as one.
+  const offStd = (key) => !near(state[WHOLE[key]], STANDARD[WHOLE[key]]) || uneven(key);
+  $('rows').innerHTML = rows.map(r => `<div role="button" tabindex="0" class="frow2${state.hand === r.key ? ' on' : ''}" data-group="hand" data-value="${r.key}" aria-pressed="${state.hand === r.key}" style="--ink:${r.ink}">
+    <div><div class="fname"><i style="background:${r.ink}"></i>${r.name}</div><div class="fstd">${uneven(r.key) ? 'differs across the face' : r.note || '&nbsp;'}</div></div>
+    <div><div class="fig">${r.set}</div><small>${r.chg}</small></div>
+    <div><div class="marks">${grid}${mk(r.v, r.ink)}</div></div>
+    <div class="end">${end(r.v)}</div>
+    <div class="rst"><button type="button" class="nudge" data-row-reset="${r.key}" title="Back to standard" aria-label="Set ${r.name} back to standard"${offStd(r.key) ? '' : ' disabled'}>${RESET_ICON}</button></div>
+  </div>`).join('');
 
-  // the simulated BCD reading
-  const rd = mm() ? 4 : 5;
-  $('std-bcd').textContent = `standard ${fLen(g.std)}${mark()}`;
-  $('bcdOut').textContent = fLen(g.std + state.dBcd, rd);
-  $('chg-bcd').innerHTML = `<div class="ln pick"><span class="fig">${way(state.dBcd) ? `${sLen(state.dBcd, rd)} ${state.dBcd > 0 ? 'larger' : 'smaller'}` : 'standard'}</span></div>`;
-  $('bar-bcd').innerHTML = grid + mk(one.bcd, 'var(--f-bcd)');
-  $('trv-bcd').innerHTML = trv(one.bcd);
+  // The factor in hand, as a whole: the one slider, what it reads, and its
+  // picks. The picks are the plate and tape thicknesses of the Stack setup,
+  // and for the temperature the metal the cylinder is made of.
+  $('wholeCap').textContent = 'Whole';
+  $('wholeOut').textContent = { bcd: fLen(g.std + state.dBcd, rd), temp: fTemp(state.dT), plate: fLen(state.plate), tape: fLen(state.tape) }[state.hand];
+  $('picks').innerHTML = state.hand === 'temp' ? Object.keys(METAL).map(mt => btn('metal', mt, state.metal === mt, METAL[mt], 'sm')).join('')
+    : PICKS[state.hand] ? PICKS[state.hand].map(v => btn(state.hand, v, near(state[state.hand], v), fLen(v, 3), 'sm')).join('') : '';
 
-  // temperature: both metals, the chosen one first in weight
-  const metals = Object.keys(METAL);
-  $('dTout').textContent = fTemp(state.dT);
-  $('chg-temp').innerHTML = metals.map(mt => `<div class="ln${state.metal === mt ? ' pick' : ''}"><span class="who">${METAL[mt]}</span><span class="fig">BCD ${sLen(grow(mt), mm() ? 4 : 5) || fLen(0, mm() ? 4 : 5)}</span></div>`).join('');
-  $('bar-temp').innerHTML = grid + metals.map(mt => mk(one[mt], state.metal === mt ? 'var(--f-temp)' : '#8a8a8a')).join('');
-  $('trv-temp').innerHTML = metals.map(mt => trv(one[mt], state.metal === mt)).join('');
-
-  // plate
-  const dPlate = state.plate - STACK.plate, face = g.std / 2 + STACK.tape + state.plate - g.rp;
-  $('std-plate').textContent = `standard ${fLen(STACK.plate)}${mark()}`;
-  $('plateOut').textContent = fLen(state.plate);
-  $('plate-picks').innerHTML = PICKS.plate.map(v => btn('plate', v, near(state.plate, v), fLen(v, 3), 'sm')).join('');
-  $('chg-plate').innerHTML = `<div class="ln pick"><span class="fig">${way(dPlate) ? `${sLen(dPlate)} ${dPlate > 0 ? 'thicker' : 'thinner'}` : 'standard'}</span></div><div class="ln"><small>${way(face) ? `face ${fLen(Math.abs(face))} ${face > 0 ? 'above' : 'below'} pitch` : 'face on the pitch line'}</small></div>`;
-  $('bar-plate').innerHTML = grid + mk(one.plate, 'var(--f-plate)');
-  $('trv-plate').innerHTML = trv(one.plate);
-
-  // tape
-  const dTape = state.tape - STACK.tape;
-  $('std-tape').textContent = `standard ${fLen(STACK.tape)}${mark()}`;
-  $('tapeOut').textContent = fLen(state.tape);
-  $('tape-picks').innerHTML = PICKS.tape.map(v => btn('tape', v, near(state.tape, v), fLen(v, 3), 'sm')).join('');
-  $('chg-tape').innerHTML = `<div class="ln pick"><span class="fig">${way(dTape) ? `${sLen(dTape)} ${dTape > 0 ? 'thicker' : 'thinner'}` : 'standard'}</span></div>`;
-  $('bar-tape').innerHTML = grid + mk(one.tape, 'var(--f-tape)');
-  $('trv-tape').innerHTML = trv(one.tape);
-
-  // all four together, for the cylinder type picked: one figure above the stack
+  // all four together, for the cylinder type picked: one figure over the lens
   const tot = all[state.metal];
   $('all-stat').innerHTML = `<span class="k">All together, ${METAL[state.metal].toLowerCase()}</span><span class="v">${way(tot) ? `${sLen(tot)}${mark()}` : `${fLen(0)}${mark()}`}</span><span class="s">${way(tot) ? `${fFine(tot).replace(/^[+−]/, '')} ${fineName()} ${way(tot)} at the end of the repeat` : 'no travel'} · prints ${fLen(R + tot)}${mark()}</span>`;
 
-  // the lens: the standard in grey, one ink per factor, and the three together
-  // Only the four changes together, in black, against the grey standard. In a
-  // rosette the black screen carries the travel and cyan, magenta and yellow sit at zero.
+  // the lens: the four changes together, in black, against the grey standard,
+  // or each change alone in a lens of its own. In a rosette the black screen
+  // carries the travel and cyan, magenta and yellow sit at zero.
   const marks = [
-    { name: 'Standard', ink: '#7a7972', off: 0, std: true },
-    { name: `All together, ${METAL[state.metal].toLowerCase()}`, ink: '#2b2a27', k: 'K', ang: 45, off: all[state.metal] },
+    STD_MARK,
+    { name: `All together, ${METAL[state.metal].toLowerCase()}`, ...BLACK, off: all[state.metal] },
   ];
+  // Each change alone, in the order of the rows above, in the ink nearest its row's colour square.
+  const alone = [
+    { key: 'bcd', name: 'Cylinder BCD', color: 'var(--f-bcd)', ink: '#00a3e0', k: 'C', ang: 15, off: one.bcd },
+    { key: 'temp', name: `Temperature, ${METAL[state.metal].toLowerCase()}`, color: 'var(--f-temp)', ink: '#e4007c', k: 'M', ang: 75, off: one[state.metal] },
+    { key: 'plate', name: 'Plate thickness', color: 'var(--f-plate)', ink: '#2e9e4f', k: 'G', ang: 60, off: one.plate },
+    { key: 'tape', name: 'Mounting tape', color: 'var(--f-tape)', ink: '#f07d1a', k: 'O', ang: 30, off: one.tape },
+  ];
+  const quad = state.show === 'each', across = state.show === 'face';
+  $('shows').innerHTML = [['all', 'All together'], ['each', 'Each'], ['face', 'Across the face']].map(([v, l]) => btn('show', v, state.show === v, l)).join('');
   $('alphaOut').textContent = `${state.alpha}%`;
   $('pats').innerHTML = PATTERNS.map(([v, label]) => `<button type="button" class="pill icon${state.pat === v ? ' on' : ''}" data-group="pat" data-value="${v}" aria-pressed="${state.pat === v}" title="${label}" aria-label="${label}">${PAT_ICON[v]()}${LPI[v] ? `<small>${LPI[v]}</small>` : ''}</button>`).join('');
-  $('lensdraw').innerHTML = lensSvg(marks, state.pat, g.teeth);
-  // The rosettes draw no grey standard, so the legend leaves it out there.
-  $('lens-legend').innerHTML = marks.filter(m => !(m.std && LPI[state.pat])).map(m => `<span><i style="background:${m.ink}"></i><b>${m.name}</b>${m.std ? '' : ` <span class="mono">${way(m.off) ? `${sLen(m.off)}${mark()}` : 'no travel'}</span>`}</span>`).join('');
-
-  // the stack
-  $('stackdraw').innerHTML = stackSvg(g, { bcd: (g.std + state.dBcd) * (1 + GROWTH[state.metal] * dF()) });
-  $('stack-legend').innerHTML = [['Cylinder', 'var(--steel)'], ['Tape', 'var(--tape)'], ['Backing', 'var(--backing)'], ['Polymer', 'var(--polymer)']].map(([l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
+  // Across the face: everything as set, at each of the four readings. The tail
+  // edge is out of square by what the two edges differ, it bows by what the
+  // two readings between them stand off the straight line from edge to edge,
+  // and each diagonal runs from a lead corner to the far tail corner.
+  $('all-stat').hidden = across;
+  $('widthbar').hidden = !across;
+  $('face-stat').hidden = !across;
+  $('widthUnit').textContent = mm() ? 'mm' : 'in';
+  drawCyl(rd, g, ((g.std + state.dBcd) * (1 + GROWTH[state.metal] * dF()) - g.std) / 2 + dTape + dPlate);
+  // The plate, two ways, and a real one lies between them.
+  // Follows: it gives enough to sit on the cylinder as it is, so each reading
+  // prints its own length and nothing moves across.
+  // Stiff: it will not stretch, so it cannot follow four readings that are not
+  // in line. It sits on the straight taper nearest all four (least squares),
+  // which is how the two readings in between come to move the corners. On a
+  // taper a flat sheet laid square at the lead edge does not run true: it
+  // winds round as a slight spiral toward the large end, by
+  // length² × taper ÷ (2 × radius) at the tail, both taken at the backing.
+  $('flexes').innerHTML = [['stiff', 'Stiff', 'The plate does not stretch: it sits on the straight taper nearest the four readings, and winds toward the large end'], ['follows', 'Follows', 'The plate gives: each reading prints its own length, and nothing moves across']]
+    .map(([v, l, tip]) => `<button type="button" class="pill sm${state.flex === v ? ' on' : ''}" data-group="flex" data-value="${v}" aria-pressed="${state.flex === v}" title="${tip}">${l}</button>`).join('');
+  if (across) {
+    // What sets the length is the radius of the backing line, and at each
+    // reading that is the cylinder as it measures there with the tape as it is
+    // there on top. The plate's thickness at a reading counts there the way
+    // the plate's thickness counts as a whole, by the page's one rule for a
+    // plate: the art is as short as that thickness asks for, so a plate that
+    // is thicker at a reading prints shorter there. All three readings go
+    // through the Stiff | Follows choice together, so the plate's is turned
+    // into the radius that would print the same length (0.001" of plate comes
+    // to 0.001" of radius, the same as the tape), and the taper, the lengths
+    // and the sideways walk are worked from that one radius at each reading.
+    const stiff = state.flex === 'stiff', xs = [-0.5, -1 / 6, 1 / 6, 0.5], heat = 1 + GROWTH[state.metal] * dF();
+    const flat = R - TAU * (state.plate - STACK.backing);
+    const rb = xs.map((_, i) => (((g.std + state.dBcd + F.bcd[i]) * heat) / 2 + state.tape + F.tape[i] + STACK.backing) * flat / (flat - TAU * F.plate[i]));
+    const mean = rb.reduce((s, r) => s + r, 0) / 4, slope = xs.reduce((s, x, i) => s + x * rb[i], 0) / xs.reduce((s, x) => s + x * x, 0);   // radius, edge to edge, along the nearest straight line
+    const tf = (stiff ? xs.map(x => mean + slope * x) : rb).map(r => (flat * g.rp) / r - R);
+    const side = stiff ? (flat * flat * (slope / state.width)) / (2 * mean) : 0;
+    const skew = tf[3] - tf[0], dg = [Math.hypot(R + tf[3], state.width + side), Math.hypot(R + tf[0], state.width - side)], dd = dg[0] - dg[1];
+    // A stiff plate's tail edge is a straight line but for a hair (the length does not go quite evenly with the BCD), and a hair is not a bow.
+    const bows = [1, 2].map(i => tf[i] - (tf[0] + (skew * i) / 3)), most = Math.abs(bows[0]) >= Math.abs(bows[1]) ? bows[0] : bows[1], bow = Math.abs(most) < 5e-6 ? 0 : most;
+    const amt = (v) => `${fLen(way(v) ? Math.abs(v) : 0)}${mark()}`, fine = (v) => `${fFine(v).replace(/^[+−]/, '')} ${fineName()}`;
+    const st = (k, v, s) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+    $('face-stat').innerHTML = st('Out of square', amt(skew), way(skew) ? `${fine(skew)}, side ${skew < 0 ? 4 : 1} short` : 'square')
+      + st('Diagonals differ', amt(dd), `1 to 4 ${fLen(dg[0])}${mark()} · 4 to 1 ${fLen(dg[1])}${mark()}`)
+      + st('Tail edge bow', amt(bow), way(bow) ? `${fine(bow)}, middle ${bow > 0 ? 'long' : 'short'}` : 'straight')
+      + st('Tail sideways', amt(side), way(side) ? `${fine(side)}, toward side ${side > 0 ? 4 : 1}` : 'none');
+    const drawn = faceSvg(tf, side, state.pat, g.teeth, R, state.width, true);
+    $('lensdraw').innerHTML = drawn.svg;
+    $('lens-legend').innerHTML = `<span><i style="background:${STD_MARK.ink}"></i><b>Standard</b></span><span><i style="background:${BLACK.ink}"></i><b>As set</b></span><span>Travel drawn <b class="mono">×${drawn.ex.toLocaleString('en-US')}</b>, figures in ${fineName()}</span>`;
+  } else {
+  $('lensdraw').innerHTML = quad ? quadSvg(alone, state.pat, g.teeth, 2) : lensSvg(marks, state.pat, g.teeth, true);
+  // The rosettes draw no grey standard, so the legend leaves it out there. The
+  // four lenses name their own changes, so only the standard is named under them.
+  $('lens-legend').innerHTML = marks.filter(m => (m.std ? !LPI[state.pat] : !quad)).map(m => `<span>${!m.std && quad ? '' : `<i style="background:${m.ink}"></i>`}<b>${m.name}</b>${m.std ? '' : ` <span class="mono">${way(m.off) ? `${sLen(m.off)}${mark()}` : 'no travel'}</span>`}</span>`).join('');
+  }
 };
 
 // ----- the sliders stay put while everything else is redrawn -----
+// The cylinder across its face, under the one slider. It is cut along its
+// length and seen from the front of the press: the cylinder, then the tape,
+// the backing and the polymer over the width of the plate, with the four
+// readings left to right. It is a diagram, drawn at two scales, and neither is
+// true:
+//   - how thick the tape and the plate are as a whole sets how thick their
+//     layers are drawn (LAYER below), so a thicker plate looks thicker;
+//   - anything measured in tenths of a thou is drawn at FS pixels to the inch
+//     of height: what a reading is off by, and where the whole BCD and the
+//     temperature put the cylinder's surface. That is the same for all three
+//     layers, so a point moves under the pointer as it is dragged, and every
+//     point has the same reach on the drawing: REACH either way, shown by a
+//     pair of faint rails on the layer in hand.
+// The face as the rows set it stands at FACE_Y, and the drawing grows downward
+// as the layers thicken. Built once and then only moved, never redrawn, so a
+// drag is not cut short; the same goes for the four steppers under it.
+// The layers are drawn thick enough that the thinnest tape and the thinnest
+// plate still show with a reading at the bottom of its reach.
+const FX = [60, 180, 300, 420], FS = 10000, REACH = 0.003, FACE_Y = 46 + 3 * FS * REACH, BACK_PX = 8;
+const LAYER = { tape: (t) => 42 + (t - STACK.tape) * 1000, plate: (p) => 60 + (p - STACK.plate) * 800 };
+$('facecyl').innerHTML = `<svg id="cylsvg" width="100%" style="display:block;touch-action:none" role="group" aria-label="The cylinder, tape and plate across the face">
+  <rect id="cy-j0" x="0" width="20" height="20" fill="var(--steel)" opacity=".65"/><rect id="cy-j1" x="460" width="20" height="20" fill="var(--steel)" opacity=".65"/>
+  <polygon id="cy-steel" fill="var(--steel)"/><polygon id="cy-tape" fill="var(--tape)"/><polygon id="cy-back" fill="var(--backing)"/><polygon id="cy-poly" fill="var(--polymer)"/>
+  <text id="cy-cap" x="4" y="14" font-size="11" font-weight="800" fill="var(--mu)">Face against the pitch line</text>
+  <text id="cy-n-plate" x="120" text-anchor="middle" font-size="11" font-weight="700" fill="#111"></text><text id="cy-n-tape" x="120" text-anchor="middle" font-size="11" font-weight="700" fill="#111"></text><text id="cy-n-bcd" x="28" font-size="11" font-weight="700" fill="#111"></text>
+  ${FX.map((x, i) => `<line id="cy-drop${i}" x1="${x}" x2="${x}" stroke="var(--tx)" stroke-opacity=".28" stroke-dasharray="2 3"/>
+  <text id="cy-face${i}" x="${x}" y="30" font-size="11" class="mono" fill="var(--tx2)" text-anchor="middle"></text>
+  <text id="cy-num${i}" x="${x}" font-size="12" font-weight="800" fill="var(--tx)" text-anchor="middle">${i + 1}</text>`).join('')}
+  <polyline id="cy-max" fill="none" stroke-width="1.5" stroke-dasharray="3 4" opacity=".6" pointer-events="none"/><polyline id="cy-min" fill="none" stroke-width="1.5" stroke-dasharray="3 4" opacity=".6" pointer-events="none"/>
+  ${Object.entries(CATS).map(([k, c]) => `<polyline id="cy-l-${k}" fill="none" stroke="${c.ink}" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline id="cy-p-${k}" data-group="hand" data-value="${k}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" pointer-events="stroke" style="cursor:pointer"><title>${c.name}: take it in hand</title></polyline>`).join('')}
+  ${FX.map((x, i) => `<circle id="cy-hit${i}" data-h="${i}" cx="${x}" r="15" fill="transparent" tabindex="0" role="slider" aria-orientation="vertical"/><circle id="cy-h${i}" cx="${x}" r="7.5" stroke="var(--bg)" stroke-width="2" pointer-events="none"/>`).join('')}
+</svg>`;
+$('facesteps').innerHTML = FX.map((_, i) => `<div class="fstep"><button type="button" class="nudge" data-face="${i}" data-by="-1" aria-label="Reading ${i + 1} down">−</button><output id="fv${i}"></output><button type="button" class="nudge" data-face="${i}" data-by="1" aria-label="Reading ${i + 1} up">+</button><button type="button" class="nudge" data-face-reset="${i}" title="Back to none" aria-label="Set reading ${i + 1} back to none">${RESET_ICON}</button></div>`).join('');
+// `lift` is how far the face stands off the pitch line before anything differs
+// across the face: what the whole cylinder, the whole tape and the whole plate
+// are off the standard by, added up. With the temperature in hand there are no
+// points: it is one figure for the whole cylinder.
+const drawCyl = (rd, g, lift) => {
+  const F = state.face, cat = CATS[state.hand], pts = (ys) => FX.map((x, i) => `${x},${ys[i]}`);
+  // The layers as the rows set them: the tape and the plate as thick as they
+  // are as a whole, and the cylinder's surface where its whole BCD and its
+  // temperature put it. Then each reading on top of that.
+  const tapePx = LAYER.tape(state.tape), platePx = LAYER.plate(state.plate), y0 = FACE_Y + platePx + BACK_PX + tapePx, floor = y0 + 64;
+  const base = y0 - (FS * ((g.std + state.dBcd) * (1 + GROWTH[state.metal] * dF()) - g.std)) / 2;
+  const cyl = F.bcd.map(v => base - (FS * v) / 2), tape = cyl.map((y, i) => y - tapePx - FS * F.tape[i]), back = tape.map(y => y - BACK_PX), face = back.map((y, i) => y - platePx - FS * F.plate[i]);
+  const band = (lo, hi) => [...pts(lo), ...pts(hi).reverse()].join(' ');
+  // FACE_Y leaves room over the face for all three layers at the top of their
+  // reach at one reading; a cylinder made larger as a whole lifts the lot, and
+  // the drawing grows upward by as much, so nothing runs into the figures.
+  const topY = Math.min(0, base - y0);
+  $('cylsvg').setAttribute('viewBox', `0 ${topY} 480 ${floor + 28 - topY}`);
+  $('cy-cap').setAttribute('y', topY + 14);
+  FX.forEach((_, i) => $(`cy-face${i}`).setAttribute('y', topY + 30));
+  for (const id of ['cy-j0', 'cy-j1']) $(id).setAttribute('y', floor - 20);
+  $('cy-steel').setAttribute('points', `20,${floor} 20,${cyl[0]} ${pts(cyl).join(' ')} 460,${cyl[3]} 460,${floor}`);
+  // the rails: as far as a point on the layer in hand can go, either way, from where the whole puts it
+  const rest = { bcd: cyl.map(() => base), tape: cyl.map(y => y - tapePx), plate: back.map(y => y - platePx) }[state.hand];
+  for (const [id, sg] of [['cy-max', -1], ['cy-min', 1]]) {
+    $(id).setAttribute('display', cat ? 'inline' : 'none');
+    if (cat) { $(id).setAttribute('points', pts(rest.map(y => y + sg * FS * REACH)).join(' ')); $(id).setAttribute('stroke', cat.ink); }
+  }
+  $('cy-tape').setAttribute('points', band(cyl, tape));
+  $('cy-back').setAttribute('points', band(tape, back));
+  $('cy-poly').setAttribute('points', band(back, face));
+  // Every layer that can be set across the face wears a strip of its own
+  // colour along its top edge, so all three can be seen to be there for the
+  // taking: the one in hand is the heavy one with a point at each reading, and
+  // a click on another takes that one in hand. The temperature has no strip:
+  // it is one figure for the whole cylinder.
+  const edge = { bcd: cyl, tape, plate: face }, top = edge[state.hand] || cyl;
+  for (const k of Object.keys(CATS)) {
+    for (const id of [`cy-l-${k}`, `cy-p-${k}`]) $(id).setAttribute('points', pts(edge[k]).join(' '));
+    $(`cy-l-${k}`).setAttribute('stroke-width', state.hand === k ? 4.5 : 3);
+    $(`cy-p-${k}`).setAttribute('display', state.hand === k ? 'none' : 'inline');
+  }
+  // each layer is named with what it is set to as a whole
+  // (halfway between readings 1 and 2, in the middle of the layer there, clear of the points)
+  Object.assign($('cy-n-plate'), { textContent: `Plate ${fLen(state.plate)}` }).setAttribute('y', (back[0] + face[0] + back[1] + face[1]) / 4 + 4);
+  Object.assign($('cy-n-tape'), { textContent: `Tape ${fLen(state.tape)}` }).setAttribute('y', (cyl[0] + tape[0] + cyl[1] + tape[1]) / 4 + 4);
+  Object.assign($('cy-n-bcd'), { textContent: `BCD ${fLen(g.std + state.dBcd, rd)}${way(dF()) ? `, ${fTemp(state.dT)}` : ''}` }).setAttribute('y', floor - 7);
+  $('facesteps').style.visibility = cat ? 'visible' : 'hidden';
+  FX.forEach((_, i) => {
+    const v = cat ? F[state.hand][i] : 0, all = lift + F.bcd[i] / 2 + F.tape[i] + F.plate[i];
+    $(`cy-drop${i}`).setAttribute('y1', face[i]); $(`cy-drop${i}`).setAttribute('y2', floor + 6);
+    $(`cy-num${i}`).setAttribute('y', floor + 22);
+    // how far the face stands off the pitch line at this reading
+    $(`cy-face${i}`).textContent = sLen(all, rd);
+    const dot = $(`cy-h${i}`), hit = $(`cy-hit${i}`);
+    dot.setAttribute('cy', top[i]); hit.setAttribute('cy', top[i]);
+    dot.setAttribute('display', cat ? 'inline' : 'none'); hit.setAttribute('display', cat ? 'inline' : 'none');
+    if (!cat) return;
+    dot.setAttribute('fill', cat.ink);
+    hit.setAttribute('aria-label', `${cat.name} at reading ${i + 1}, against the whole`);
+    hit.setAttribute('aria-valuenow', v); hit.setAttribute('aria-valuemin', -cat.lim); hit.setAttribute('aria-valuemax', cat.lim);
+    $(`fv${i}`).textContent = sLen(v, rd);
+    document.querySelector(`[data-face-reset="${i}"]`).disabled = near(v, 0);
+  });
+};
+// A reading, kept to its range and to its step. Setting one turns the result
+// to the sheet, where a difference across the face can be seen.
+const setFace = (i, v) => {
+  const c = CATS[state.hand];
+  if (!c) return;
+  state.face[state.hand][i] = Number(Math.max(-c.lim, Math.min(c.lim, Math.round(v / c.step) * c.step)).toFixed(5));
+  state.show = 'face';
+  update();
+};
+// A point is dragged up and down, or moved with the arrow keys. The BCD is a
+// diameter and the drawing is a radius, so its point moves half of what it reads.
+let drag = null;
+$('cylsvg').addEventListener('pointerdown', (e) => {
+  const h = e.target.closest('[data-h]');
+  if (!h || !CATS[state.hand]) return;
+  const i = Number(h.dataset.h);
+  drag = { i, y: e.clientY, v: state.face[state.hand][i], k: 480 / $('cylsvg').getBoundingClientRect().width };
+  // held, so the drag carries on when the pointer leaves the point; without the hold it still works over the drawing
+  try { h.setPointerCapture(e.pointerId); } catch (err) { /* no such pointer */ }
+  h.focus(); e.preventDefault();
+});
+$('cylsvg').addEventListener('pointermove', (e) => { if (drag) setFace(drag.i, drag.v + (((drag.y - e.clientY) * drag.k) / FS) * (state.hand === 'bcd' ? 2 : 1)); });
+for (const ev of ['pointerup', 'pointercancel']) $('cylsvg').addEventListener(ev, () => { drag = null; });
+$('cylsvg').addEventListener('keydown', (e) => {
+  const h = e.target.closest('[data-h]'), by = { ArrowUp: 1, ArrowDown: -1 }[e.key];
+  if (!h || !by || !CATS[state.hand]) return;
+  e.preventDefault();
+  setFace(Number(h.dataset.h), state.face[state.hand][Number(h.dataset.h)] + by * CATS[state.hand].step);
+});
+
+// The one slider is the factor in hand as a whole, so its range and step are
+// that factor's. It is set here, when the factor changes, and not while it is
+// being dragged.
+const WHOLE = { bcd: 'dBcd', temp: 'dT', plate: 'plate', tape: 'tape' };
 const setSliders = () => {
-  const lim = state.temp === 'C' ? 22 : 40;
-  Object.assign($('dT'), { min: -lim, max: lim, step: 1, value: state.dT });
-  Object.assign($('dBcd'), { min: -BCD_RANGE, max: BCD_RANGE, step: BCD_STEP, value: state.dBcd });
-  for (const k of ['plate', 'tape']) Object.assign($(k), { min: RANGE[k][0], max: RANGE[k][1], step: STEP, value: state[k] });
+  const lim = state.temp === 'C' ? 22 : 40, k = WHOLE[state.hand];
+  Object.assign($('whole'), k === 'dT' ? { min: -lim, max: lim, step: 1 } : k === 'dBcd' ? { min: -BCD_RANGE, max: BCD_RANGE, step: BCD_STEP } : { min: RANGE[k][0], max: RANGE[k][1], step: STEP });
+  $('whole').value = state[k];
   $('alpha').value = state.alpha;
+  $('width').value = mm() ? Number((state.width * 25.4).toFixed(1)) : Number(state.width.toFixed(3));
 };
 // rounded to the finest step on the page, so a dragged value never carries float dust
-for (const k of ['dBcd', 'dT', 'plate', 'tape', 'alpha']) $(k).addEventListener('input', (e) => { state[k] = Number(Number(e.target.value).toFixed(5)); update(); });
+$('whole').addEventListener('input', (e) => { state[WHOLE[state.hand]] = Number(Number(e.target.value).toFixed(5)); update(); });
+$('alpha').addEventListener('input', (e) => { state.alpha = Number(e.target.value); update(); });
+// The plate width is typed, in the length unit showing. A figure out of range leaves the last good one standing.
+$('width').addEventListener('input', (e) => { const w = Number(e.target.value) / (mm() ? 25.4 : 1); if (w >= WIDTH_RANGE[0] && w <= WIDTH_RANGE[1]) { state.width = w; update(); } });
 // The tooth count is typed. A figure that is not a whole number in range leaves the last good one standing.
 $('teeth').value = state.teeth;
 $('teeth').addEventListener('input', (e) => { const n = Number(e.target.value); if (Number.isInteger(n) && n >= 20 && n <= 250) { state.teeth = n; update(); } });
 // What each slider goes back to: the standard.
 const STANDARD = { dBcd: 0, dT: 0, plate: STACK.plate, tape: STACK.tape };
+// A factor's row is picked with Enter or the space bar as well as a click.
+$('rows').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.frow2')) { e.preventDefault(); e.target.click(); } });
 document.addEventListener('click', (e) => {
-  const back = e.target.closest('[data-reset]');
-  if (back) { state[back.dataset.reset] = STANDARD[back.dataset.reset]; setSliders(); update(); return; }
-  const n = e.target.closest('[data-nudge]');
+  // a reading across the face: step it, or put it back
+  const fr = e.target.closest('[data-face-reset]');
+  if (fr) { state.face[state.hand][Number(fr.dataset.faceReset)] = 0; update(); return; }
+  const fn = e.target.closest('[data-face]');
+  if (fn) { const i = Number(fn.dataset.face); setFace(i, state.face[state.hand][i] + Number(fn.dataset.by) * CATS[state.hand].step); return; }
+  // a row's own reset: that factor back to standard altogether, as a whole and across the face.
+  // It does not take the factor in hand.
+  const rr = e.target.closest('[data-row-reset]');
+  if (rr) {
+    const f = rr.dataset.rowReset;
+    state[WHOLE[f]] = STANDARD[WHOLE[f]];
+    if (state.face[f]) state.face[f] = [0, 0, 0, 0];
+    setSliders(); update(); return;
+  }
+  // the factor in hand as a whole: step it
+  const k = WHOLE[state.hand];
+  const n = e.target.closest('[data-whole]');
   if (n) {
-    const k = n.dataset.nudge, by = Number(n.dataset.by) * (k === 'dT' ? 1 : k === 'dBcd' ? BCD_STEP : STEP), el = $(k);
+    const by = Number(n.dataset.whole) * (k === 'dT' ? 1 : k === 'dBcd' ? BCD_STEP : STEP), el = $('whole');
     state[k] = Math.max(Number(el.min), Math.min(Number(el.max), Number((state[k] + by).toFixed(5))));
     setSliders(); update(); return;
   }
-  const b = e.target.closest('button[data-group]');
+  const b = e.target.closest('[data-group]');
   if (!b) return;
   const { group, value } = b.dataset;
   if (group === 'temp' && value !== state.temp) state.dT = Math.round(value === 'C' ? state.dT / 1.8 : state.dT * 1.8);
@@ -507,6 +848,18 @@ if (hash.includes('example')) Object.assign(state, { dBcd: 0.0002, dT: 15, plate
 const hp = PATTERNS.find(p => hash.includes(p[0]));
 if (hp) state.pat = hp[0];
 if (hash.includes('thin')) state.plate = 0.045;
+if (hash.includes('each')) state.show = 'each';
+// #face opens across the face. #f4=0.0005 sets a BCD reading, #t4= a tape one and #p4= a plate one,
+// #w=13 the plate width, all in inches; #hand=tape puts that factor in hand.
+if (hash.includes('face')) state.show = 'face';
+if (hash.includes('follows')) state.flex = 'follows';
+for (const h of hash) {
+  const m = /^([ftp])([1-4])=(-?[\d.]+)$/.exec(h), c = m && { f: 'bcd', t: 'tape', p: 'plate' }[m[1]];
+  if (m) state.face[c][m[2] - 1] = Math.max(-CATS[c].lim, Math.min(CATS[c].lim, Number(m[3])));
+  const w = /^w=([\d.]+)$/.exec(h), k = /^hand=(bcd|temp|tape|plate)$/.exec(h);
+  if (w) state.width = Math.max(WIDTH_RANGE[0], Math.min(WIDTH_RANGE[1], Number(w[1])));
+  if (k) state.hand = k[1];
+}
 setSliders(); update();
 </script>
 </body>
