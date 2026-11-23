@@ -4,6 +4,7 @@ A one-file simulator of how far the end of a flexo print repeat moves when the p
 
 - **Simulator:** [FLEXO_PLATE_DRIFT.html](https://magicphase.github.io/Flexo_Drift_Sim/FLEXO_PLATE_DRIFT.html)
 - **Demo walkthrough:** [FLEXO_PLATE_DRIFT_DEMO.html](https://magicphase.github.io/Flexo_Drift_Sim/FLEXO_PLATE_DRIFT_DEMO.html)
+- **The maths:** [FLEXO_PLATE_DRIFT_MATH.html](https://magicphase.github.io/Flexo_Drift_Sim/FLEXO_PLATE_DRIFT_MATH.html)
 
 ![The four factors, explained](FLEXO_PLATE_DRIFT_DEMO_files/slide-2.png)
 
@@ -47,6 +48,10 @@ It is a single HTML file with nothing to install. It loads nothing and saves not
 Seven stops over two light screenshots of the simulator: the page dims, one part stays lit, and a few bubbles explain it. Move with the ← → keys, the Back and Next buttons, or the numbered dots. The same seven stops are in `FLEXO_PLATE_DRIFT_DEMO_files/` as images, `slide-0.png` to `slide-6.png`.
 
 The demo is a picture of the simulator, not the simulator: nothing in it moves.
+
+## The maths
+
+A companion note: the formulas the simulator runs, the constants it uses, figures by tooth count, checks against published examples, the across-the-face geometry, what the model leaves out, and the sources.
 
 ## What the figures assume
 

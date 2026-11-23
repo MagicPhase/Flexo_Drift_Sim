@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FLEXO Plate travel: the maths</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* A companion note to FLEXO_PLATE_DRIFT.html: the formulas it runs, the
+     constants it uses, and what outside sources confirm. One file, nothing
+     loaded. Every figure on this page was worked with the simulator's own
+     functions (gear and printed), not by hand. The across-the-face figures in
+     section 6 were worked with the lines the simulator runs for that view, on
+     its own gear(), and agree with what the page shows. */
+  :root {
+    --bg: #0a0a0a; --bg2: #1a1a1a; --hair: #333; --hair2: #555;
+    --tx: #ffffff; --tx2: #e5e5e5; --mu: #a3a3a3; --pri: #3b82f6; --link: #7ab3ff;
+    --ok: #4ade80; --own: #fbbf24; --ass: #f472b6;
+    --f-bcd: #38bdf8; --f-temp: #f472b6; --f-plate: #4ade80; --f-tape: #fb923c;
+    --steel: #6b7280; --tape: #d9a066; --backing: #e9dc9a; --polymer: #5fa08c; --pitch: #f87171;
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff; --bg2: #f5f5f5; --hair: #d4d4d4; --hair2: #a3a3a3;
+    --tx: #1a1a1a; --tx2: #333333; --mu: #666666; --pri: #3b82f6; --link: #1d4ed8;
+    --ok: #15803d; --own: #b45309; --ass: #be185d;
+    --f-bcd: #00a3e0; --f-temp: #e4007c; --f-plate: #2e9e4f; --f-tape: #f07d1a;
+    --steel: #9ca3af; --tape: #e8b07a; --backing: #efe3a6; --polymer: #7fb5a3; --pitch: #c81e1e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--tx); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  .page { max-width: 1020px; margin: 0 auto; padding: 18px 18px 60px; }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+  h1 span { margin-left: 8px; font-weight: 400; letter-spacing: 0; color: var(--mu); }
+  .sp { flex: 1; }
+  .pills { display: inline-flex; gap: 4px; }
+  .pill { height: 30px; padding: 0 12px; border: 1px solid var(--hair); border-radius: 6px; background: transparent; color: var(--tx); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .pill.on { border-color: var(--pri); background: color-mix(in srgb, var(--pri) 18%, transparent); }
+  .lede { margin: 0 0 14px; color: var(--tx2); max-width: 70ch; }
+  h2 { margin: 30px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--hair); font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--mu); }
+  h3 { margin: 18px 0 4px; font-size: 15px; font-weight: 800; }
+  p { margin: 6px 0 10px; max-width: 76ch; }
+  ul { margin: 6px 0 10px; padding-left: 20px; max-width: 76ch; }
+  li { margin: 3px 0; }
+  a { color: var(--link); }
+  .mono, td.n, .f b { font-family: Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--mu); }
+  small { font-size: 13px; color: var(--mu); }
+
+  .verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+  .verdict > div { background: var(--bg); padding: 11px 13px; }
+  .verdict h3 { margin: 0 0 4px; font-size: 14px; }
+  .verdict p { margin: 0; font-size: 14px; color: var(--tx2); }
+  .tag { display: inline-block; padding: 0 7px; border-radius: 999px; border: 1px solid currentColor; font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; line-height: 18px; white-space: nowrap; }
+  .tag.ok { color: var(--ok); } .tag.own { color: var(--own); } .tag.ass { color: var(--ass); }
+
+  /* a formula: the statement, then the 71 tooth example worked through it */
+  .f { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 18px; align-items: baseline; padding: 9px 13px; margin: 8px 0; border: 1px solid var(--hair); border-left: 4px solid var(--pri); border-radius: 8px; background: var(--bg2); }
+  .f .eq { font-size: 17px; }
+  .f .eq i { font-family: Cambria, Georgia, serif; }
+  .f .ex { font-family: Consolas, monospace; font-size: 14px; color: var(--tx2); }
+  .f .note { grid-column: 1 / -1; font-size: 13px; color: var(--mu); }
+  .f.own { border-left-color: var(--own); }
+
+  .wrap { overflow-x: auto; margin: 10px 0; border: 1px solid var(--hair); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { padding: 6px 10px; font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--mu); text-align: left; border-bottom: 1px solid var(--hair); vertical-align: bottom; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th.n, td.n { text-align: right; white-space: nowrap; }
+  tr.hi td { background: var(--bg2); font-weight: 700; }
+  td i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  .two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  figure { margin: 0; border: 1px solid var(--hair); border-radius: 8px; padding: 10px; }
+  figcaption { font-size: 13px; color: var(--mu); margin-top: 6px; }
+  .src li { margin: 7px 0; }
+  .src b { font-weight: 700; }
+  @media (max-width: 760px) { .verdict, .two, .f { grid-template-columns: minmax(0, 1fr); } }
+  @media print {
+    :root, :root[data-theme="light"] { --bg: #fff; --bg2: #f5f5f5; --hair: #cfcfcf; --hair2: #a3a3a3; --tx: #111; --tx2: #222; --mu: #555; --link: #1d4ed8; --ok: #15803d; --own: #b45309; --ass: #be185d; --steel: #9ca3af; --tape: #e8b07a; --backing: #efe3a6; --polymer: #7fb5a3; --pitch: #c81e1e; }
+    .pills { display: none; } .page { max-width: none; padding: 0; } body { font-size: 12px; }
+    h2 { break-after: avoid; } .f, tr, figure, .verdict { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="head"><h1>FLEXO <span>Plate travel: the maths</span></h1><span class="sp"></span><span class="pills" id="themes"></span></div>
+  <p class="lede">What the simulator calculates, as a whole and across the face, the constants it uses, how sensitive the result is to each of them, and which parts outside sources confirm. Every worked figure uses the simulator's 71 tooth example on the standard stack, and was produced by the simulator's own functions.</p>
+
+  <div class="verdict">
+    <div><h3><span class="tag ok">Confirmed outside</span></h3><p>The gear, the print diameter, the distortion formula, the bare cylinder diameter and the expansion coefficients. Ten published worked examples and two published tables of 50 values were reworked with the simulator's functions, and all agree.</p></div>
+    <div><h3><span class="tag own">Worked out here</span></h3><p>How far the print moves when the cylinder, tape or plate is <em>off</em> the standard. It follows from the confirmed geometry and reduces to the published formula at the standard, but no source was found that states these figures, and they have not been checked on a press. The same goes for everything across the face (section 6), for which no source was looked for.</p></div>
+    <div><h3><span class="tag ass">Assumed</span></h3><p>A rigid stack, a gear driven press, and only the cylinder growing with heat. Across the face, a plate that is either fully stiff or fully giving. Section 9 lists what that leaves out.</p></div>
+  </div>
+
+  <h2>1. The model in six lines</h2>
+  <div class="two">
+    <div>
+      <p>A gear driven press lays one repeat down per turn of the plate cylinder gear, whatever the cylinder under the plate measures. The plate's polyester backing does not stretch, so the art keeps its made length at the backing. The gear lays it down at the pitch line.</p>
+      <p>Symbols: <i>N</i> teeth, <i>CP</i> circular pitch, <i>R</i> repeat, <i>r<sub>p</sub></i> pitch radius, <i>t<sub>p</sub></i> plate, <i>t<sub>b</sub></i> plate backing, <i>t<sub>t</sub></i> mounting tape, <i>K</i> the amount the plate is made short, <i>L</i> the plate's flat length, <i>r<sub>b</sub></i> the radius of the backing line, <i>P</i> what prints.</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 460 250" width="100%" role="img" aria-label="The stack on a 71 tooth cylinder, by radius: cylinder to 1.3305 inches, tape to 1.3455, backing to 1.3505, polymer to the pitch line at 1.4125">
+        <rect x="150" y="196" width="130" height="44" fill="var(--steel)"/>
+        <rect x="150" y="166" width="130" height="30" fill="var(--tape)"/>
+        <rect x="150" y="156" width="130" height="10" fill="var(--backing)"/>
+        <rect x="150" y="32" width="130" height="124" fill="var(--polymer)"/>
+        <line x1="20" y1="32" x2="296" y2="32" stroke="var(--pitch)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <line x1="140" y1="156" x2="296" y2="156" stroke="var(--tx)" stroke-width="1.5"/>
+        <g font-size="12" fill="var(--tx)">
+          <text x="20" y="26" font-weight="700" fill="var(--pitch)">Pitch line</text>
+          <text x="140" y="100" text-anchor="end">Polymer 0.062"</text>
+          <text x="140" y="165" text-anchor="end">Backing 0.005"</text>
+          <text x="140" y="186" text-anchor="end">Tape 0.015"</text>
+          <text x="140" y="222" text-anchor="end">Cylinder</text>
+          <text x="304" y="36" font-family="Consolas, monospace"><tspan font-family="Cambria, Georgia, serif" font-style="italic" font-size="14">r</tspan><tspan font-family="Cambria, Georgia, serif" font-style="italic" font-size="10" dy="3">p</tspan><tspan dy="-3"> 1.4125"</tspan></text>
+          <text x="304" y="160" font-family="Consolas, monospace"><tspan font-family="Cambria, Georgia, serif" font-style="italic" font-size="14">r</tspan><tspan font-family="Cambria, Georgia, serif" font-style="italic" font-size="10" dy="3">b</tspan><tspan dy="-3"> 1.3505"</tspan></text>
+          <text x="304" y="170" font-size="11" fill="var(--mu)" dy="6">backing line</text>
+          <text x="304" y="200" font-family="Consolas, monospace">BCD/2 1.3305"</text>
+        </g>
+        <line x1="296" y1="196" x2="300" y2="196" stroke="var(--mu)"/>
+      </svg>
+      <figcaption>The standard stack on a 71 tooth cylinder, by radius. Not to scale across the layers.</figcaption>
+    </figure>
+  </div>
+
+  <div class="f"><div class="eq"><i>R</i> = <i>N</i> × <i>CP</i></div><div class="ex">71 × 0.125 = 8.8750"</div><div class="note"><span class="tag ok">Confirmed</span> The repeat. Each tooth of a 1/8" circular pitch gear adds 0.125".</div></div>
+  <div class="f"><div class="eq"><i>r<sub>p</sub></i> = <i>R</i> ÷ 2π</div><div class="ex">8.8750 ÷ 6.28319 = 1.41250" &nbsp;(pitch diameter 2.8250")</div><div class="note"><span class="tag ok">Confirmed</span> The pitch circle is the printing circle: its circumference is the repeat.</div></div>
+  <div class="f"><div class="eq"><i>K</i> = 2π (<i>t<sub>p</sub></i> − <i>t<sub>b</sub></i>)</div><div class="ex">6.28319 × (0.067 − 0.005) = 0.3896"</div><div class="note"><span class="tag ok">Confirmed</span> The plate thickness constant, or K factor. Only the soft part of the plate stretches when it is wrapped.</div></div>
+  <div class="f"><div class="eq"><i>L</i> = <i>R</i> − <i>K</i> &nbsp;&nbsp; distortion = <i>K</i> ÷ <i>R</i> &nbsp;&nbsp; scale = 1 − <i>K</i> ÷ <i>R</i></div><div class="ex">8.8750 − 0.3896 = 8.4854" &nbsp; 4.389% &nbsp; 95.611%</div><div class="note"><span class="tag ok">Confirmed</span> The two figures in the simulator's Distortion box. Prepress calls the second the distortion factor: the art is scaled to it in the run direction.</div></div>
+  <div class="f"><div class="eq">Standard BCD = 2 (<i>r<sub>p</sub></i> − <i>t<sub>t</sub></i> − <i>t<sub>p</sub></i>)</div><div class="ex">2 × (1.41250 − 0.015 − 0.067) = 2.6610"</div><div class="note"><span class="tag ok">Confirmed</span> The bare cylinder that puts the plate's face on the pitch line: the print diameter less twice the plate and tape. See the squeeze note in section 9.</div></div>
+  <div class="f own"><div class="eq"><i>P</i> = <i>L</i> × <i>r<sub>p</sub></i> ÷ <i>r<sub>b</sub></i> &nbsp;&nbsp; with &nbsp; <i>r<sub>b</sub></i> = BCD ÷ 2 + <i>t<sub>t</sub></i> + <i>t<sub>b</sub></i></div><div class="ex">8.4854 × 1.41250 ÷ 1.35050 = 8.8750"</div><div class="note"><span class="tag own">Worked out here</span> What prints. The art spans an angle of <i>L</i> ÷ <i>r<sub>b</sub></i> on the cylinder, and the gear moves the web <i>r<sub>p</sub></i> for each unit of angle. On the standard cylinder this gives back exactly <i>R</i>, which is the published distortion formula read the other way round.</div></div>
+
+  <p><b>Travel</b> is <i>P</i> − <i>R</i>: negative prints short, positive prints long. In the simulator these lines are the functions <span class="mono">gear()</span> and <span class="mono">printed()</span>.</p>
+
+  <h2>2. How each factor enters</h2>
+  <p>All four factors act through one mechanism: they move the backing line, or change the length of the art on it. Near the standard, lifting the backing line by a small amount <i>Δr</i> moves the end of the repeat by</p>
+  <div class="f own"><div class="eq">travel ≈ −(2π ÷ scale) × <i>Δr</i></div><div class="ex">6.28319 ÷ 0.95611 = 6.572 per unit of radius</div><div class="note"><span class="tag own">Worked out here</span> So 0.001" of extra radius under the plate prints the 71 tooth repeat 6.57 thousandths short. The 2π is the same one that is in <i>K</i>: one more thousandth of radius is 6.28 more thousandths of circumference.</div></div>
+  <div class="wrap"><table>
+    <thead><tr><th>Factor</th><th>What it changes in the formula</th><th class="n">One step</th><th class="n">Travel, 71T</th></tr></thead>
+    <tbody>
+      <tr><td><i class="sw" style="background:var(--f-bcd)"></i>Cylinder BCD</td><td>BCD in <i>r<sub>b</sub></i>. A diameter, so half of it is radius.</td><td class="n">+0.001"</td><td class="n">−3.285 thou</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-temp)"></i>Temperature</td><td>BCD becomes BCD × (1 + <i>α</i> × <i>ΔT</i>), then as above. Roughly −<i>α</i> × <i>ΔT</i> × <i>R</i>.</td><td class="n">+10°F steel<br>+10°F aluminium</td><td class="n">−0.568 thou<br>−1.145 thou</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-tape)"></i>Mounting tape</td><td><i>t<sub>t</sub></i> in <i>r<sub>b</sub></i>. All of it is radius.</td><td class="n">+0.001"</td><td class="n">−6.567 thou</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-plate)"></i>Plate thickness</td><td><i>t<sub>p</sub></i> in <i>K</i>, so the art is made shorter for the thicker plate. <i>r<sub>b</sub></i> does not move.</td><td class="n">+0.001"</td><td class="n">−6.572 thou</td></tr>
+    </tbody>
+  </table></div>
+  <p>The simulator shows these as −3.28, −0.57, −6.57 and −6.57 in its four-figure box. The plate is always taken as made for the thickness in use, so a thicker plate carries shorter art and prints short on a cylinder cut for the standard plate.</p>
+
+  <h2>3. The constants</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Constant</th><th class="n">Simulator</th><th>What outside sources give</th><th>Effect of the spread</th></tr></thead>
+    <tbody>
+      <tr><td>Circular pitch</td><td class="n">0.125"</td><td>1/8" CP is the common narrow web gear. 1/4" CP, 10 mm CP and diametral pitch gears also exist. [5] [8]</td><td>Sets the repeat. Not a tolerance: it is the press.</td></tr>
+      <tr><td>Plate thickness</td><td class="n">0.067"<br><small>1.70 mm</small></td><td>Common narrow web plates: 1.14, 1.70, 2.54, 2.84 and 3.94 mm. [1]</td><td>Changes <i>K</i>, the distortion and the standard BCD.</td></tr>
+      <tr><td>Plate backing</td><td class="n">0.005"<br><small>0.127 mm</small></td><td>0.127 mm or 0.178 mm polyester. [1] "Most 0.067 inch plates are on a 0.005 inch mylar." [2]</td><td>0.007" in place of 0.005" moves the 71T scale from 95.611% to 95.752%.</td></tr>
+      <tr><td>Mounting tape</td><td class="n">0.015"<br><small>0.38 mm</small></td><td>0.25, 0.38 or 0.51 mm for narrow web presses. [1]</td><td>Changes the standard BCD only. Tape is not part of <i>K</i>. [1]</td></tr>
+      <tr><td>Steel expansion</td><td class="n">6.5 × 10⁻⁶ /°F<br><small>11.7 × 10⁻⁶ /°C</small></td><td>A36 and 1020 steel: 6.5. Carbon and low alloy steels, 32 to 212°F: 6.2 to 6.8. [11] [12] One general table lists mild steel at 5.9 and wrought carbon steel at 7.8 over 70 to 800°F. [14]</td><td>Per 10°F at 71T: −0.52 to −0.68 thou, against −0.57 used.</td></tr>
+      <tr><td>Aluminium expansion</td><td class="n">13.1 × 10⁻⁶ /°F<br><small>23.6 × 10⁻⁶ /°C</small></td><td>Pure aluminium 13.1; 6061 alloy 13.0 to 13.1; common wrought alloys 12.7 to 13.4. [11] [13] [14]</td><td>Per 10°F at 71T: −1.11 to −1.17 thou, against −1.15 used.</td></tr>
+      <tr><td>2π</td><td class="n">6.28319</td><td>Exact. Several shop sources round π to 3.14 or 3.142, which is why their last digit can differ. [1] [2]</td><td>None.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The expansion figures are handbook averages for roughly room temperature to 212°F. The exact alloy of a given plate cylinder is not known to the simulator, so the temperature row is the least certain of the four: within about 3% for aluminium and 20% for steel across the grades listed.</p>
+
+  <h2>4. Figures by tooth count</h2>
+  <p>The standard stack on a 1/8" CP gear. Travel is in thousandths of an inch at the end of the repeat, for one step of each change.</p>
+  <div class="wrap"><table>
+    <thead><tr><th class="n">Teeth</th><th class="n">Repeat</th><th class="n">Pitch dia.</th><th class="n">Std BCD</th><th class="n">Distortion</th><th class="n">Scale</th><th class="n">0.001" BCD</th><th class="n">10°F steel</th><th class="n">10°F alum.</th><th class="n">0.001" radius</th></tr></thead>
+    <tbody>
+      <tr><td class="n">40</td><td class="n">5.000"</td><td class="n">1.5915</td><td class="n">1.4275</td><td class="n">7.791%</td><td class="n">92.209%</td><td class="n">−3.405</td><td class="n">−0.316</td><td class="n">−0.637</td><td class="n">−6.814</td></tr>
+      <tr><td class="n">48</td><td class="n">6.000"</td><td class="n">1.9099</td><td class="n">1.7459</td><td class="n">6.493%</td><td class="n">93.507%</td><td class="n">−3.358</td><td class="n">−0.381</td><td class="n">−0.768</td><td class="n">−6.719</td></tr>
+      <tr><td class="n">56</td><td class="n">7.000"</td><td class="n">2.2282</td><td class="n">2.0642</td><td class="n">5.565%</td><td class="n">94.435%</td><td class="n">−3.325</td><td class="n">−0.446</td><td class="n">−0.899</td><td class="n">−6.653</td></tr>
+      <tr><td class="n">64</td><td class="n">8.000"</td><td class="n">2.5465</td><td class="n">2.3825</td><td class="n">4.869%</td><td class="n">95.131%</td><td class="n">−3.301</td><td class="n">−0.511</td><td class="n">−1.031</td><td class="n">−6.605</td></tr>
+      <tr class="hi"><td class="n">71</td><td class="n">8.875"</td><td class="n">2.8250</td><td class="n">2.6610</td><td class="n">4.389%</td><td class="n">95.611%</td><td class="n">−3.285</td><td class="n">−0.568</td><td class="n">−1.145</td><td class="n">−6.572</td></tr>
+      <tr><td class="n">80</td><td class="n">10.000"</td><td class="n">3.1831</td><td class="n">3.0191</td><td class="n">3.896%</td><td class="n">96.104%</td><td class="n">−3.268</td><td class="n">−0.641</td><td class="n">−1.293</td><td class="n">−6.538</td></tr>
+      <tr><td class="n">96</td><td class="n">12.000"</td><td class="n">3.8197</td><td class="n">3.6557</td><td class="n">3.246%</td><td class="n">96.754%</td><td class="n">−3.246</td><td class="n">−0.772</td><td class="n">−1.555</td><td class="n">−6.494</td></tr>
+      <tr><td class="n">112</td><td class="n">14.000"</td><td class="n">4.4563</td><td class="n">4.2923</td><td class="n">2.783%</td><td class="n">97.217%</td><td class="n">−3.231</td><td class="n">−0.902</td><td class="n">−1.817</td><td class="n">−6.463</td></tr>
+      <tr><td class="n">128</td><td class="n">16.000"</td><td class="n">5.0930</td><td class="n">4.9290</td><td class="n">2.435%</td><td class="n">97.565%</td><td class="n">−3.219</td><td class="n">−1.032</td><td class="n">−2.079</td><td class="n">−6.440</td></tr>
+      <tr><td class="n">160</td><td class="n">20.000"</td><td class="n">6.3662</td><td class="n">6.2022</td><td class="n">1.948%</td><td class="n">98.052%</td><td class="n">−3.203</td><td class="n">−1.292</td><td class="n">−2.603</td><td class="n">−6.408</td></tr>
+      <tr><td class="n">200</td><td class="n">25.000"</td><td class="n">7.9577</td><td class="n">7.7937</td><td class="n">1.558%</td><td class="n">98.442%</td><td class="n">−3.191</td><td class="n">−1.617</td><td class="n">−3.258</td><td class="n">−6.383</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>BCD, tape and plate barely depend on the tooth count.</b> One thousandth of radius is worth 6.38 to 6.81 thou across the whole range, because it is 2π divided by a scale that only runs from 92% to 98%.</li>
+    <li><b>Temperature grows with the cylinder.</b> A bigger cylinder grows more for the same degrees, so its travel rises in step with the repeat: about five times more at 200 teeth than at 40.</li>
+    <li>"0.001" radius" is the plate thickness column, and the tape column to within 0.01 thou.</li>
+  </ul>
+
+  <h2>5. How straight the lines are</h2>
+  <p>The per-step figures can be scaled up with little error. At 71 teeth, comparing the exact formula with a straight line through the per-step figure:</p>
+  <div class="wrap"><table>
+    <thead><tr><th>Change, at the end of the slider's range</th><th class="n">Exact</th><th class="n">Straight line</th><th class="n">Difference</th></tr></thead>
+    <tbody>
+      <tr><td>BCD 0.003" large</td><td class="n">−9.847 thou</td><td class="n">−9.857 thou</td><td class="n">0.011 thou (0.1%)</td></tr>
+      <tr><td>Steel cylinder 40°F warmer</td><td class="n">−2.273 thou</td><td class="n">−2.273 thou</td><td class="n">0.001 thou</td></tr>
+      <tr><td>Aluminium cylinder 40°F warmer</td><td class="n">−4.579 thou</td><td class="n">−4.582 thou</td><td class="n">0.002 thou</td></tr>
+      <tr><td>Tape 0.030" in place of 0.015"</td><td class="n">−97.492 thou</td><td class="n">−98.575 thou</td><td class="n">1.083 thou (1.1%)</td></tr>
+      <tr><td>Plate 0.130" in place of 0.067"</td><td class="n">−414.013 thou</td><td class="n">−414.013 thou</td><td class="n">none: exactly linear</td></tr>
+    </tbody>
+  </table></div>
+  <p>The four changes also add up almost exactly. In the simulator's example (BCD +0.0002", steel +15°F, plate +0.0005", tape +0.001") the four separate travels sum to −11.362 thou and the simulator's "All together" figure is −11.357. With every factor pushed far out (BCD +0.003", aluminium +40°F, 0.107" plate, 0.020" tape) the sum is −310.0 against −308.5 together, a 0.5% difference.</p>
+
+  <h2>6. Across the face</h2>
+  <p>The simulator also lets the cylinder, the tape and the plate differ at four readings across the face, and shows what that does to the sheet. Nothing in this section comes from an outside source, and none of it has been checked on a press.</p>
+  <p>Symbols: <i>W</i> the plate width; <i>x<sub>i</sub></i> where reading <i>i</i> sits, as a share of the width from the middle: −½, −⅙, +⅙ and +½, so the four are evenly spaced from one edge of the plate to the other; <i>b<sub>i</sub></i>, <i>τ<sub>i</sub></i> and <i>p<sub>i</sub></i> what the BCD, the tape and the plate are off by at reading <i>i</i>; <i>r<sub>i</sub></i> the radius of the backing line there.</p>
+
+  <div class="f own"><div class="eq"><i>r<sub>i</sub></i> = [ (BCD + <i>b<sub>i</sub></i>) (1 + <i>α</i> <i>ΔT</i>) ÷ 2 + <i>t<sub>t</sub></i> + <i>τ<sub>i</sub></i> + <i>t<sub>b</sub></i> ] × <i>L</i> ÷ (<i>L</i> − 2π <i>p<sub>i</sub></i>)</div><div class="ex">tape +0.001" at reading 4:<br>1.35050" 1.35050" 1.35050" 1.35150"</div><div class="note"><span class="tag own">Worked out here</span> The backing line at each reading: the cylinder as it measures there, with the tape as it is there. The last factor is the plate. A plate that is <i>p</i> thicker at a reading is counted the way a thicker plate is counted as a whole in section 2: its art is 2π<i>p</i> shorter there. That is written as the radius that prints the same length, so the three kinds of reading can be handled as one. On the standard stack <i>L</i> = 2π <i>r<sub>b</sub></i> exactly, so 0.001" of plate comes to 0.001" of radius, the same as tape, to within 0.1%. Section 9 says why this line is a choice and not geometry.</div></div>
+
+  <h3>The plate, two ways</h3>
+  <p>How a real plate takes four radii that are not in line depends on how stiff it is, which the simulator does not know. It shows the two limits, and a real plate lies between them.</p>
+  <div class="f own"><div class="eq">Follows: &nbsp; <i>P<sub>i</sub></i> = <i>L</i> × <i>r<sub>p</sub></i> ÷ <i>r<sub>i</sub></i></div><div class="ex">travel 0, 0, 0 and −6.567 thou</div><div class="note"><span class="tag own">Worked out here</span> The plate gives enough to sit on the cylinder as it is. Each reading prints its own length, by the last line of section 1, and nothing moves sideways.</div></div>
+  <div class="f own"><div class="eq">Stiff: &nbsp; <i>r̄</i> = (<i>r</i><sub>1</sub> + <i>r</i><sub>2</sub> + <i>r</i><sub>3</sub> + <i>r</i><sub>4</sub>) ÷ 4 &nbsp;&nbsp; <i>s</i> = Σ <i>x<sub>i</sub></i> <i>r<sub>i</sub></i> ÷ Σ <i>x<sub>i</sub></i>²</div><div class="ex"><i>r̄</i> = 1.35075" &nbsp; <i>s</i> = 0.00090"</div><div class="note"><span class="tag own">Worked out here</span> The plate will not stretch, so it cannot follow four radii that are not in line. It sits on the straight taper nearest all four, by least squares. <i>s</i> is how much larger that line's radius is at edge 4 than at edge 1. Σ <i>x<sub>i</sub></i>² is 5⁄9, so a reading at an edge counts nine tenths of itself toward the taper and an inner reading three tenths. Every reading counts a quarter toward <i>r̄</i>.</div></div>
+  <div class="f own"><div class="eq"><i>P<sub>i</sub></i> = <i>L</i> × <i>r<sub>p</sub></i> ÷ (<i>r̄</i> + <i>s</i> <i>x<sub>i</sub></i>)</div><div class="ex">travel +1.315, −0.657, −2.628 and −4.598 thou</div><div class="note"><span class="tag own">Worked out here</span> The same line of section 1, on the fitted taper. The tail edge stays straight and leans.</div></div>
+  <div class="f own"><div class="eq">sideways at the tail = <i>L</i>² × (<i>s</i> ÷ <i>W</i>) ÷ (2 <i>r̄</i>)</div><div class="ex">8.4854² × (0.00090 ÷ 13) ÷ (2 × 1.35075) = 0.00185"</div><div class="note"><span class="tag own">Worked out here</span> A cylinder with a straight taper is a slice of a cone whose point lies <i>r̄</i> <i>W</i> ÷ <i>s</i> away along the face. Unrolled flat, the lines that run round the cone become arcs about that point. A flat sheet laid square to one of them at the lead edge runs straight on and leaves the arc by length² ÷ (2 × that distance), toward the large end. Because <i>L</i> is close to 2π <i>r̄</i>, this is close to 2π² <i>r̄</i> <i>s</i> ÷ <i>W</i>.</div></div>
+
+  <h3>The four figures over the sheet</h3>
+  <p>The plate is laid down at the lead edge, so travel is measured from there and the lead corners read zero.</p>
+  <ul>
+    <li><b>Out of square</b> is the travel at reading 4 less the travel at reading 1.</li>
+    <li><b>Diagonals differ</b> is √((<i>R</i> + travel<sub>4</sub>)² + (<i>W</i> + sideways)²) less √((<i>R</i> + travel<sub>1</sub>)² + (<i>W</i> − sideways)²): lead corner 1 to tail corner 4, less lead corner 4 to tail corner 1.</li>
+    <li><b>Tail edge bow</b> is how far readings 2 and 3 stand off the straight line from reading 1 to reading 4 at the tail. The larger of the two is shown, and anything under 0.005 thou is shown as straight.</li>
+    <li><b>Tail sideways</b> is the line above. It is zero when the plate follows.</li>
+  </ul>
+
+  <h3>Worked figures</h3>
+  <p>71 teeth, the standard stack, a 13" plate, with 0.001" added at the readings named. Thousandths of an inch. Out of square is negative when side 4 prints short, bow is positive when the middle prints long, and sideways is positive toward side 4.</p>
+  <div class="wrap"><table>
+    <thead><tr><th>0.001" more at</th><th class="n">Follows:<br>out of square</th><th class="n">Follows:<br>tail edge bow</th><th class="n">Stiff:<br>out of square</th><th class="n">Stiff:<br>sideways</th></tr></thead>
+    <tbody>
+      <tr><td><i class="sw" style="background:var(--f-bcd)"></i>BCD, reading 4</td><td class="n">−3.285</td><td class="n">+2.190</td><td class="n">−2.957</td><td class="n">+0.923</td></tr>
+      <tr class="hi"><td><i class="sw" style="background:var(--f-tape)"></i>Tape, reading 4</td><td class="n">−6.567</td><td class="n">+4.378</td><td class="n">−5.912</td><td class="n">+1.845</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-plate)"></i>Plate, reading 4</td><td class="n">−6.572</td><td class="n">+4.381</td><td class="n">−5.917</td><td class="n">+1.847</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-tape)"></i>Tape, reading 3</td><td class="n">0</td><td class="n">−6.567</td><td class="n">−1.971</td><td class="n">+0.615</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-tape)"></i>Tape, readings 3 and 4</td><td class="n">−6.567</td><td class="n">+2.189</td><td class="n">−7.880</td><td class="n">+2.460</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-tape)"></i>Tape, readings 1 and 4</td><td class="n">0</td><td class="n">+6.567</td><td class="n">0</td><td class="n">0</td></tr>
+      <tr><td><i class="sw" style="background:var(--f-tape)"></i>Tape, readings 2 and 3</td><td class="n">0</td><td class="n">−6.567</td><td class="n">0</td><td class="n">0</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>One edge reading.</b> A plate that follows prints that edge the full 6.57 thou short and bends the tail edge. A stiff plate takes nine tenths of the reading as taper, so it is 5.91 thou out of square with a straight tail edge, and walks 1.85 thou toward the thick side.</li>
+    <li><b>One inner reading.</b> A plate that follows shows it only as a bow. A stiff plate turns three tenths of it into taper: 1.97 thou out of square and 0.62 thou sideways. This is how readings 2 and 3 come to move the corners.</li>
+    <li><b>Two readings on one side.</b> The stiff plate is further out of square than the one that follows, 7.88 against 6.57, because the straight line through 0, 0, 1, 1 runs from −0.1 to 1.1.</li>
+    <li><b>Matched readings.</b> Both edges, or both inner readings, leave no taper. The stiff plate prints 3.285 thou short all the way across, with nothing out of square and nothing sideways. The plate that follows shows 6.57 thou of bow.</li>
+    <li><b>It scales.</b> Tape 0.002" and 0.003" thicker at reading 4 give a stiff plate −11.820 and −17.724 thou out of square, and 3.690 and 5.534 thou sideways: two and three times the 0.001" figures to within 0.1%.</li>
+  </ul>
+
+  <p>The same tape reading, 0.001" at reading 4 on a 13" plate, by tooth count:</p>
+  <div class="wrap"><table>
+    <thead><tr><th class="n">Teeth</th><th class="n">Follows: out of square</th><th class="n">Stiff: out of square</th><th class="n">Stiff: sideways</th></tr></thead>
+    <tbody>
+      <tr><td class="n">40</td><td class="n">−6.805</td><td class="n">−6.128</td><td class="n">+1.002</td></tr>
+      <tr><td class="n">56</td><td class="n">−6.647</td><td class="n">−5.985</td><td class="n">+1.437</td></tr>
+      <tr class="hi"><td class="n">71</td><td class="n">−6.567</td><td class="n">−5.912</td><td class="n">+1.845</td></tr>
+      <tr><td class="n">96</td><td class="n">−6.490</td><td class="n">−5.843</td><td class="n">+2.525</td></tr>
+      <tr><td class="n">128</td><td class="n">−6.437</td><td class="n">−5.795</td><td class="n">+3.395</td></tr>
+      <tr><td class="n">160</td><td class="n">−6.406</td><td class="n">−5.766</td><td class="n">+4.265</td></tr>
+      <tr><td class="n">200</td><td class="n">−6.381</td><td class="n">−5.744</td><td class="n">+5.352</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>Out of square barely depends on the tooth count,</b> for the reason given in section 4.</li>
+    <li><b>The sideways walk grows with the cylinder:</b> about five times more at 200 teeth than at 40, since it goes with <i>r̄</i>.</li>
+    <li><b>A narrower plate walks further for the same reading,</b> because the same difference from edge to edge is a steeper taper. At 71 teeth: 3.690 thou on a 6.5" plate, 1.845 on 13", 0.923 on 26" and 0.600 on 40". Out of square does not change with the width.</li>
+  </ul>
+  <p><b>The middle of the plate.</b> The factor rows and the single lens stand for the middle of the plate, so they take the average of the four readings. Tape 0.001" thicker at one reading counts there as 0.00025" more tape: 1.643 thou short at 71 teeth.</p>
+
+  <h2>7. Checks against published examples</h2>
+  <p>Each published example was fed to the simulator's own functions.</p>
+  <div class="wrap"><table>
+    <thead><tr><th>Source</th><th>Their example</th><th class="n">They give</th><th class="n">Simulator's functions</th></tr></thead>
+    <tbody>
+      <tr><td>BOSPrint Docs [2]</td><td><i>K</i> for a 0.067" plate on 0.005" mylar</td><td class="n">0.3896</td><td class="n">0.3896</td></tr>
+      <tr><td>FlexoExchange, Burgos [4]</td><td>8.000" repeat, 0.067" plate, 0.005" backing</td><td class="n">95.13%</td><td class="n">95.131%</td></tr>
+      <tr><td>Kwality Labels [9]</td><td>68 teeth, 8.5" repeat</td><td class="n">95.417%</td><td class="n">95.417%</td></tr>
+      <tr><td>PrintPlanet, two posters [10]</td><td>10.5" repeat, 0.062" soft thickness; and the shop rule "repeat − .39"</td><td class="n">96.289%<br>96.2857%</td><td class="n">96.290%</td></tr>
+      <tr><td>Valdec and others, 2022 [1]</td><td>Tables 2 and 3: 50 distortion factors for five plates, two backings and 40 to 120 teeth</td><td class="n">81.14% to 98.41%</td><td class="n">all 50 within 0.03 of a percentage point</td></tr>
+      <tr><td>Flexoworks [8]</td><td>100 teeth at 1/8" CP</td><td class="n">12.5", Ø 3.979"</td><td class="n">12.500", Ø 3.9789"</td></tr>
+      <tr><td>FlexoExchange, Burgos [5]</td><td>82 teeth × 0.125"; 66 teeth × 0.250"</td><td class="n">10.25"; 16.5"</td><td class="n">10.25"; 16.5"</td></tr>
+      <tr><td>FlexoExchange forum [6]</td><td>Bare cylinder, 87 and 74 teeth at 10 DP, 0.067" plate, 0.020" stickyback, 0.005" sleeve</td><td class="n">8.516"; 7.216"<br><small>supplier 8.520"; 7.220"</small></td><td class="n">8.5160"; 7.2160"</td></tr>
+    </tbody>
+  </table></div>
+  <p>The small differences come from rounding in the sources: π taken as 3.14 or 3.142, <i>K</i> rounded to 0.39, and figures cut to two decimals. In the last row the supplier's cylinders are 0.004" larger than the plain formula. Section 9 explains why.</p>
+
+  <h2>8. How to check the part that is worked out here</h2>
+  <p>The off-standard travel is geometry, not a measurement. Two press tests would confirm or correct it:</p>
+  <ul>
+    <li><b>A known shim.</b> Print a repeat, then add a film of known thickness under the mounting tape and print again with nothing else changed. At 71 teeth the model predicts 6.6 thou shorter per 0.001" of film, measured over one full repeat.</li>
+    <li><b>Two measured cylinders.</b> Mount the same plate, on the same tape, on two cylinders of one tooth count whose BCD differs by a known amount. The model predicts 3.3 thou of print length per 0.001" of BCD, so cylinders 0.0008" apart should differ by about 2.6 thou at the end of the repeat.</li>
+    <li><b>A known shim at one edge.</b> For across the face: put a film of known thickness under the tape at one edge of the plate only, print, and measure the repeat at both edges of the sheet and how far a tail mark sits sideways from its lead mark. For 0.001" at one edge reading, at 71 teeth on a 13" plate, the model's two limits are 5.9 to 6.6 thou out of square and 0 to 1.8 thou of walk toward the thick edge. Where a real plate falls between them is what this test would show.</li>
+  </ul>
+  <p>If the press shows less than predicted, the likely cause is the soft plate or the foam tape giving at the nip, which the model does not include.</p>
+
+  <h2>9. What the model leaves out</h2>
+  <ul>
+    <li><span class="tag ass">Assumed</span> <b>A rigid stack.</b> The plate and tape are taken at their nominal thickness. On press the plate is squeezed into the web by a few thousandths, and foam tape compresses. One source gives the lightest "kiss" engagement as 0.003" [1].</li>
+    <li><span class="tag ass">Assumed</span> <b>No squeeze allowance in the standard BCD.</b> Some cylinder makers size the bare cylinder 0.004" larger than the plain formula, 0.002" of squeeze each side, so the plate's face sits slightly proud of the pitch line. The forum example in section 7 shows exactly this [6]. A shop whose cylinders were bought that way should expect its measured BCDs to sit about 0.004" above the simulator's standard.</li>
+    <li><span class="tag ass">Assumed</span> <b>A gear driven press.</b> The web moves one repeat per turn of the gear and does not slip, stretch or shrink. On a servo press the repeat is set by the drive, not by a pitch line. A plate face that is off the print diameter also slurs [1], which the model does not draw.</li>
+    <li><span class="tag ass">Assumed</span> <b>Only the cylinder grows with heat.</b> The gear, the plate, the tape and the web are left at their sizes, and the cylinder is at one even temperature. No flexo source was found that gives a temperature figure for print length, so this row rests on handbook expansion alone.</li>
+    <li><span class="tag ass">Assumed</span> <b>The backing is the line that keeps its length.</b> This is the convention behind every distortion formula cited here [1] [2] [4]. One supplier states the constant with the photopolymer thickness alone [3], which is the same thing when the backing is the only other layer.</li>
+  </ul>
+  <p>Across the face (section 6) adds these:</p>
+  <ul>
+    <li><span class="tag ass">Assumed</span> <b>The plate is one of two limits.</b> Stiff or Follows, with no stiffness figure anywhere. A real plate lies between them, and the model does not say where.</li>
+    <li><span class="tag ass">Assumed</span> <b>A thick spot in the plate prints short there.</b> By the geometry of section 1 alone, a plate that is thicker at one reading would not change the length at all: the backing line does not move, and the art was made for the plate as a whole. The simulator instead counts a plate reading the way it counts the plate as a whole, so that all three kinds of reading move the print. This is a choice made for the simulator, not a result.</li>
+    <li><span class="tag ass">Assumed</span> <b>Four readings, evenly spaced, edge to edge of the plate,</b> and for the stiff plate a straight line fitted through them by least squares. Another fit would share the readings out differently.</li>
+    <li><span class="tag ass">Assumed</span> <b>The plate is laid square at the lead edge.</b> All of the walk then shows at the tail. Laid from the middle of its length, the same taper would move each end a quarter as far.</li>
+    <li><span class="tag ass">Assumed</span> <b>Nothing else changes across the face.</b> Impression, the web and the temperature are taken as even from side to side.</li>
+  </ul>
+
+  <h2>10. Sources</h2>
+  <p>All links were opened and read on 18 November 2026. Forum posts and shop pages are practitioners' accounts, not standards; they are listed because they publish worked numbers that can be checked. None of them covers section 6: no source was looked for on print length or sideways travel across the face.</p>
+  <ol class="src">
+    <li><b>Valdec, Tomerlin, Hajdek, Miljković, "Influence of the Polymer Plate Thickness on the Plate Distortion Factor in Flexography",</b> Tehnički glasnik (Technical Journal) 16, 1 (2022), 47–52. Peer reviewed. Derives the distortion factor two ways, gives <i>K</i> = 2π × (plate − backing), states that the print diameter is the cylinder plus the mounting tape and the plate, lists stock plate, backing and tape thicknesses, and tabulates 50 values. <a href="https://hrcak.srce.hr/271928">Article page</a> · <a href="https://hrcak.srce.hr/file/394092">PDF</a></li>
+    <li><b>BOSPrint Docs, "Cylinders (Flexo)".</b> <i>K</i> = 2π × (plate thickness − plate mylar thickness), distortion % = <i>K</i> ÷ <i>R</i> × 100, and the 0.067" on 0.005" example. Its later percentage step uses a different <i>K</i> (0.452) than the one it derives, so only its <i>K</i> is used here. <a href="https://sites.google.com/view/bosprintdocs/setups/cylinders-flexo">sites.google.com/view/bosprintdocs</a></li>
+    <li><b>Luminite, "What Is Distortion in Flexo Printing?"</b> Plate thickness constant = 2π × photopolymer thickness; distortion factor % = constant ÷ repeat length × 100. <a href="https://blog.luminite.com/blog/what-is-distortion-in-flexo-printing">blog.luminite.com</a></li>
+    <li><b>Frank Burgos, FlexoExchange, "Calculating Distortion Factors Without a Chart!"</b> (print diameter − 2 × soft thickness) ÷ print diameter, with the 8.000" example. <a href="http://www.flexoexchange.com/articles/calc_distortion.html">flexoexchange.com/articles/calc_distortion.html</a></li>
+    <li><b>Frank Burgos, FlexoExchange, "CP Versus DP: Understanding the Differences".</b> Teeth × CP = repeat; the pitch circle "corresponds to the printing circumference"; π ÷ DP = CP. <a href="http://flexoexchange.com/cpdp_article.html">flexoexchange.com/cpdp_article.html</a></li>
+    <li><b>FlexoExchange forum, "How to determinate bare cylinder diameter".</b> Bare cylinder = pitch diameter less twice the plate and stickyback, with two worked cylinders and a 0.002" per side squeeze factor. A poster's table, not an expert's answer. <a href="http://flexoexchange.com/forum/viewtopic.php?f=4&amp;t=103">flexoexchange.com/forum</a></li>
+    <li><b>All Printing Resources, "Gear Tooth based Print Repeat &amp; Distortion Calculator".</b> "Multiplying the circular pitch by the number of teeth on the gear yields the print repeat length." An independent calculator to try figures against. <a href="https://www.teamflexo.com/gear-tooth-distortion-calculator/">teamflexo.com</a></li>
+    <li><b>Flexoworks, "Flexo cylinder sizes" and its repeat length calculator.</b> Repeat = gear teeth × circular pitch; print-surface diameter = repeat ÷ π; "subtract twice the plate + sticky-back build from the surface diameter"; the repeat "is fixed by the gear and cylinder". <a href="https://www.flexoworks.com/field-notes/flexo-cylinder-sizes">Field note</a> · <a href="https://www.flexoworks.com/tools/repeat-length-calculator">Calculator</a></li>
+    <li><b>Kwality Labels, "Flexographic Plate Distortion".</b> Teeth × 0.125" and a 68 tooth example scaled to 95.417%. Presents the formulas as the Flexographic Technical Association's. <a href="https://kwalitylabels.com/flexographic-plate-distortion/">kwalitylabels.com</a></li>
+    <li><b>PrintPlanet forum.</b> "Calculating Distortion - HELP": two methods and the "repeat − .39" shop rule for 1/8" pitch presses. "Methodology for New Tooling?": "8 teeth equaling 1 inch of repeat". <a href="https://printplanet.com/threads/calculating-distortion-help.20014/">Distortion thread</a> · <a href="https://printplanet.com/threads/methodology-for-new-tooling.264401/">Tooling thread</a></li>
+    <li><b>AmesWeb, "Linear Thermal Expansion Coefficient for Metals".</b> A36 and 1020 steel 6.5, 6061 and 1100 aluminium 13.1 × 10⁻⁶ /°F. Cites Callister and Machinery's Handbook. <a href="https://amesweb.info/Materials/Linear-Thermal-Expansion-Coefficient-Metals.aspx">amesweb.info</a></li>
+    <li><b>AmesWeb, "Linear Thermal Expansion Coefficient of Steel".</b> Carbon and low alloy grades 6.2 to 6.8 × 10⁻⁶ /°F over 32 to 212°F. Cites ASM Ready Reference: Thermal Properties of Metals. <a href="https://amesweb.info/Materials/Linear_Thermal_Expansion_Coefficient_of_Steel.aspx">amesweb.info</a></li>
+    <li><b>AmesWeb, "Linear Thermal Expansion Coefficient of Aluminum Alloys".</b> Pure aluminium 13.1; 6061 listed at 13.0 here. Cites ASM Metals Handbook Desk Edition. <a href="https://amesweb.info/Materials/Thermal_Expansion_Coefficient_of_Aluminum.aspx">amesweb.info</a></li>
+    <li><b>The Engineering ToolBox, "Metals - Temperature Expansion Coefficients".</b> Aluminium 13.1, 6061 alloy 13.0, mild steel 5.9, wrought carbon steel 7.8 (70 to 800°F), in 10⁻⁶ in/(in °F). <a href="https://www.engineeringtoolbox.com/thermal-expansion-metals-d_859.html">engineeringtoolbox.com</a></li>
+  </ol>
+  <p class="muted">Not used: Kodak's workflow help pages on flexo distortion now ask for a sign-in, and a 3M mounting tape guide and the Flexopedia site could not be opened, so nothing here rests on them.</p>
+</div>
+
+<script>
+// Theme only. #light or #dark in the address picks one; otherwise the system's setting.
+const hash = window.location.hash.slice(1).split(',');
+let theme = hash.includes('light') ? 'light' : hash.includes('dark') ? 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+const draw = () => {
+  document.documentElement.dataset.theme = theme;
+  document.getElementById('themes').innerHTML = [['dark', 'Dark'], ['light', 'Light']].map(([v, l]) => `<button type="button" class="pill${theme === v ? ' on' : ''}" data-theme-pick="${v}" aria-pressed="${theme === v}">${l}</button>`).join('');
+};
+document.getElementById('themes').addEventListener('click', (e) => { const b = e.target.closest('[data-theme-pick]'); if (b) { theme = b.dataset.themePick; draw(); } });
+draw();
+</script>
+</body>
+</html>
